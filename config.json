@@ -1,0 +1,18 @@
+{
+  "name": "Import images",
+  "type": "app",
+  "categories": [
+    "Import",
+    "Images"
+  ],
+  "description": "Import images without annotations from Team Files",
+  "docker_image": "supervisely/base-py-sdk:v6.12.0",
+  "main_script": "src/main.py",
+  "task_location": "workspace_tasks",
+  "icon": "https://i.imgur.com/fLX5COF.png",
+  "icon_background": "#FFFFFF",
+  "headless": true,
+  "context_menu": {
+    "target": ["files_folder"]
+  }
+}

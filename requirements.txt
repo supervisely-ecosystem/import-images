@@ -1,0 +1,3 @@
+supervisely==6.12.0
+supervisely[apps]==6.12.0
+supervisely[extras]==6.12.0
