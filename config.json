@@ -9,7 +9,7 @@
   "docker_image": "supervisely/base-py-sdk:6.10.1",
   "main_script": "src/main.py",
   "task_location": "workspace_tasks",
-  "icon": "https://i.imgur.com/fLX5COF.png",
+  "icon": "https://i.imgur.com/mDH9HA3.png",
   "icon_background": "#FFFFFF",
   "headless": true,
   "context_menu": {
