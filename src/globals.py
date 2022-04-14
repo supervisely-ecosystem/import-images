@@ -1,12 +1,14 @@
 import os
 
 import supervisely as sly
-from supervisely.app.v1.app_service import AppService
+from fastapi import FastAPI
+from supervisely.app.fastapi import create
 
-my_app = AppService()
+app = FastAPI()
 
-api: sly.Api = my_app.public_api
-task_id = my_app.task_id
+sly_app = create()
+
+api = sly.Api.from_env()
 
 TEAM_ID = int(os.environ["context.teamId"])
 WORKSPACE_ID = int(os.environ["context.workspaceId"])

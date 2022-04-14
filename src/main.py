@@ -1,14 +1,14 @@
 import supervisely as sly
+from supervisely.app.widgets import SlyTqdm
 
 import functions as f
 import globals as g
 
+progress_bar = SlyTqdm()
 
-@g.my_app.callback("import_images_from_team_files")
+
 @sly.timeit
-def import_images_from_team_files(
-    api: sly.Api, task_id: int, context: dict, state: dict, app_logger
-):
+def import_images_from_team_files(api: sly.Api):
     dir_info = api.file.list(g.TEAM_ID, g.INPUT_PATH)
     project_name = f.get_project_name_from_input_path(g.INPUT_PATH)
     datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info)
@@ -23,21 +23,17 @@ def import_images_from_team_files(
         images_names = datasets_images_map[dataset_name]["img_names"]
         images_hashes = datasets_images_map[dataset_name]["img_hashes"]
 
-        progress = sly.Progress(
-            "Dataset: {!r}".format(dataset_name), len(images_hashes)
-        )
-        for batch_names, batch_hashes in zip(
-            sly.batched(images_names, 10), sly.batched(images_hashes, 10)
+        for batch_names, batch_hashes in progress_bar(
+                zip(sly.batched(images_names, 10), sly.batched(images_hashes, 10)),
+                total=len(images_hashes) // 10,
+                message="Dataset: {!r}".format(dataset_name),
         ):
             api.image.upload_hashes(
                 dataset_id=dataset_info.id, names=batch_names, hashes=batch_hashes
             )
-            progress.iters_done_report(len(batch_hashes))
-
-    g.my_app.stop()
 
 
-def main():
+if __name__ == "__main__":
     sly.logger.info(
         "Script arguments",
         extra={
@@ -47,15 +43,8 @@ def main():
         },
     )
 
-    data = {}
-    state = {}
-
-    g.my_app.run(
-        state=state,
-        data=data,
-        initial_events=[{"state": state, "command": "import_images_from_team_files"}],
-    )
-
-
-if __name__ == "__main__":
-    sly.main_wrapper("main", main)
+    import_images_from_team_files(g.api)
+    try:
+        sly.app.fastapi.shutdown()
+    except KeyboardInterrupt:
+        sly.logger.info("Application shutdown successfully")

@@ -37,7 +37,7 @@ def get_datasets_images_map(dir_info: list) -> tuple:
             try:
                 sly.image.validate_ext(full_path_file)
             except Exception as e:
-                g.my_app.logger.warn(
+                sly.logger.warn(
                     "File skipped {!r}: error occurred during processing {!r}".format(
                         full_path_file, str(e)
                     )
