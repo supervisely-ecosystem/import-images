@@ -1,6 +1,29 @@
+
+<div align="center" markdown>
+<img src=""/>  
+
 # Import Images
 
-This app allows you to upload only images without any annotations. Supported images formats: 
+<p align="center">
+  <a href="#Overview">Overview</a> •
+  <a href="#How-To-Run">How To Run</a> •
+  <a href="#How-To-Use">How To Use</a>
+</p>
+
+[![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/import-images)
+[![](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://supervise.ly/slack)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/supervisely-ecosystem/import-images)
+[![views](https://app.supervise.ly/public/api/v3/ecosystem.counters?repo=supervisely-ecosystem/import-images&counter=views&label=views)](https://supervise.ly)
+[![used by teams](https://app.supervise.ly/public/api/v3/ecosystem.counters?repo=supervisely-ecosystem/import-images&counter=downloads&label=used%20by%20teams)](https://supervise.ly)
+[![runs](https://app.supervise.ly/public/api/v3/ecosystem.counters?repo=supervisely-ecosystem/import-images&counter=runs&label=runs&123)](https://supervise.ly)
+
+</div>
+
+# Overview
+
+This app allows you to upload only images without any annotations. 
+
+Supported images formats: `.jpg`, `.jpeg`, `.mpo`, `.bmp`, `.png`, `.webp`, `.nrrd`
 
 #### Input files structure
 
@@ -27,6 +50,16 @@ my_images_project
 
 As a result we will get project `my_images_project` with four datasets with the names: `ds0`, `my_folder1`, `my_folder1__my_folder2`, `my_folder3`.
 
-### Example 
+# How to Run
+
+**Step 1.** Add [Import Images](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/import-images) app to your team from Ecosystem
+
+<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/import-images" src="https://i.imgur.com/7dfX1s2.png" width="350px" style='padding-bottom: 10px'/>
+
+**Step 2.** Run the application from the context menu of the directory with images on Team Files page
+
+<img src="https://i.imgur.com/0DF8igu.png" width="80%" style='padding-top: 10px'>  
+
+### Demo
 Example of uploading a flat set of images:
-![](https://i.imgur.com/COfEHoM.gif)
+![](https://i.imgur.com/4v8NRCK.gif)
