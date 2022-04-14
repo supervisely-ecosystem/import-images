@@ -6,7 +6,7 @@
     "Images"
   ],
   "description": "Import images without annotations from Team Files",
-  "docker_image": "supervisely/base-py-sdk:6.10.1",
+  "docker_image": "supervisely/base-py-sdk:6.14.0",
   "main_script": "src/main.py",
   "task_location": "workspace_tasks",
   "icon": "https://i.imgur.com/fLX5COF.png",
