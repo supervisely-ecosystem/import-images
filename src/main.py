@@ -11,13 +11,15 @@ def import_images_from_team_files(
 ):
     dir_info = api.file.list(g.TEAM_ID, g.INPUT_PATH)
     project_name = f.get_project_name_from_input_path(g.INPUT_PATH)
-    datasets_names, datasets_images_map = f.get_datasets_images_map(
-        dir_info, project_name
-    )
+    datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info)
 
-    project = api.project.create(workspace_id=g.WORKSPACE_ID, name=project_name)
+    project = api.project.create(
+        workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
+    )
     for dataset_name in datasets_names:
-        dataset_info = api.dataset.create(project_id=project.id, name=dataset_name)
+        dataset_info = api.dataset.create(
+            project_id=project.id, name=dataset_name, change_name_if_conflict=True
+        )
         images_names = datasets_images_map[dataset_name]["img_names"]
         images_hashes = datasets_images_map[dataset_name]["img_hashes"]
 
@@ -28,11 +30,7 @@ def import_images_from_team_files(
             sly.batched(images_names, 10), sly.batched(images_hashes, 10)
         ):
             api.image.upload_hashes(
-                dataset_id=dataset_info.id,
-                names=batch_names,
-                hashes=batch_hashes,
-                progress_cb=None,
-                metas=None,
+                dataset_id=dataset_info.id, names=batch_names, hashes=batch_hashes
             )
             progress.iters_done_report(len(batch_hashes))
 
