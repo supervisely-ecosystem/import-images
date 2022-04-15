@@ -1,3 +1,5 @@
+import os
+
 import supervisely as sly
 from supervisely.app.widgets import SlyTqdm
 
@@ -21,16 +23,26 @@ def import_images_from_team_files(api: sly.Api):
             project_id=project.id, name=dataset_name, change_name_if_conflict=True
         )
         images_names = datasets_images_map[dataset_name]["img_names"]
+        images_paths = datasets_images_map[dataset_name]["img_paths"]
         images_hashes = datasets_images_map[dataset_name]["img_hashes"]
 
-        for batch_names, batch_hashes in progress_bar(
-                zip(sly.batched(images_names, 10), sly.batched(images_hashes, 10)),
+        for batch_names, batch_paths, batch_hashes in progress_bar(
+                zip(sly.batched(images_names, 10), sly.batched(images_paths, 10), sly.batched(images_hashes, 10)),
                 total=len(images_hashes) // 10,
                 message="Dataset: {!r}".format(dataset_name),
         ):
-            api.image.upload_hashes(
-                dataset_id=dataset_info.id, names=batch_names, hashes=batch_hashes
-            )
+            if g.NEED_DOWNLOAD:
+                res_batch_names, res_batch_paths = f.normalize_exif_and_remove_alpha_channel(api, batch_names, batch_paths, batch_hashes)
+                api.image.upload_paths(dataset_info.id, res_batch_names, res_batch_paths)
+                for path in res_batch_paths:
+                    sly.fs.silent_remove(path)
+            else:
+                try:
+                    api.image.upload_hashes(
+                        dataset_id=dataset_info.id, names=batch_names, hashes=batch_hashes
+                    )
+                except Exception as e:
+                    sly.logger.warn(e)
 
 
 if __name__ == "__main__":

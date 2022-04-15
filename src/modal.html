@@ -1,0 +1,10 @@
+<sly-field title="Import settings"
+           description="If images you import has exif rotation or they look rotated in labeling interfaces please enable
+           normalize exif. If your images have alpha channel, enable remove alpha channel">
+    <div class="mt10">
+        <el-checkbox v-model="state.normalize_exif">normalize exif</el-checkbox>
+    </div>
+    <div class="mt10">
+        <el-checkbox v-model="state.remove_alpha_channel">remove alpha channel</el-checkbox>
+    </div>
+</sly-field>

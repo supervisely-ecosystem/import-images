@@ -21,9 +21,11 @@
 
 # Overview
 
-This app allows you to upload only images without any annotations. 
+This app allows you to upload only images without any annotations. By default, flags "normalize exif" and "remove alpha channel" are disabled. 
+If images you import has exif rotation, or they look rotated in labeling interfaces please enable "normalize exif" flag in the modal window.
+If your images have alpha channel, enable "remove alpha channel" flag.
 
-Supported images formats: `.jpg`, `.jpeg`, `.mpo`, `.bmp`, `.png`, `.webp`, `.nrrd`
+Supported images formats: `.jpg`, `.jpeg`, `.bmp`, `.png`, `.webp`, `.nrrd`
 
 #### Input files structure
 
