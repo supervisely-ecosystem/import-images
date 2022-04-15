@@ -12,6 +12,8 @@ progress_bar = SlyTqdm()
 @sly.timeit
 def import_images(api: sly.Api):
     dir_info = api.file.list(g.TEAM_ID, g.INPUT_PATH)
+    if len(dir_info) == 0:
+        raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
     project_name = f.get_project_name_from_input_path(g.INPUT_PATH)
     datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info)
 
