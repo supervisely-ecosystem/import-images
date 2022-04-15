@@ -43,6 +43,11 @@ def import_images(api: sly.Api):
                 except Exception as e:
                     sly.logger.warn(e)
 
+    if g.REMOVE_SOURCE:
+        api.file.remove(g.TEAM_ID, g.INPUT_PATH)
+        source_dir_name = g.INPUT_PATH.lstrip('/').rstrip('/')
+        sly.logger.info(f"Source directory: '{source_dir_name}' was successfully removed.")
+
 
 if __name__ == "__main__":
     sly.logger.info(
