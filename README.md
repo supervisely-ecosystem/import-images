@@ -21,11 +21,13 @@
 
 # Overview
 
-This app allows you to upload only images without any annotations. By default, flags "normalize exif" and "remove alpha channel" are disabled. 
+This app allows you to upload only images without any annotations. By default, flags "normalize exif", "remove alpha channel" and "convert .tiff to .jpeg" are disabled. 
 If images you import has exif rotation, or they look rotated in labeling interfaces please enable "normalize exif" flag in the modal window.
-If your images have alpha channel, enable "remove alpha channel" flag.
+If your images have alpha channel, enable "remove alpha channel" flag. 
+Supervisely currently doesn't support `.tiff` image format, but if you want to import `.tiff` images, enable "convert .tiff to .jpeg" flag in the modal window. 
+Be aware that "remove files after successful import" flag is enabled by default, it will automatically remove source directory after import.
 
-Supported images formats: `.jpg`, `.jpeg`, `.bmp`, `.png`, `.webp`, `.mpo`
+Supported images formats: `.jpg`, `.jpeg`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`(enable flag)
 
 #### Input files structure
 
@@ -64,7 +66,7 @@ As a result we will get project `my_images_project` with four datasets with the 
 
 **Step 3.** Select options and press the Run button
 
-<img src="https://i.imgur.com/4SuWPGg.png" width="80%" style='padding-top: 10px'>  
+<img src="https://i.imgur.com/htdK6Xh.png" width="80%" style='padding-top: 10px'>  
 
 ### Demo
 Example of uploading a flat set of images:

@@ -1,8 +1,10 @@
 import os
 import pathlib
+from PIL import Image
+
 
 import supervisely as sly
-from supervisely.io.fs import get_file_name_with_ext
+from supervisely.io.fs import get_file_name_with_ext, get_file_ext, get_file_name
 
 import globals as g
 
@@ -27,6 +29,15 @@ def get_dataset_name(file_path: str) -> str:
         return f"{path_parts[-3]}_{path_parts[-2]}"
 
 
+def convert_tiff_to_jpeg(path):
+    name = f"{get_file_name(path)}.jpg"
+    img = Image.open(path)
+    path = f"{os.path.dirname(path)}/{name}"
+    img = img.convert("RGB")
+    img.save(path, "JPEG")
+    return name, path
+
+
 def normalize_exif_and_remove_alpha_channel(api: sly.Api, names: list, paths: list, hashes: list) -> tuple:
     """If flags normalize exif or remove alpha channel set to True, download and process images with corresponding flags."""
     res_batch_names = []
@@ -37,8 +48,13 @@ def normalize_exif_and_remove_alpha_channel(api: sly.Api, names: list, paths: li
     api.file.download_directory(g.TEAM_ID, remote_path=remote_ds_dir, local_save_path=local_save_dir)
     for name, path in zip(names, app_batch_paths):
         try:
-            img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
-            sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
+            file_ext = get_file_ext(path).lower()
+            if file_ext == '.tiff' and g.CONVERT_TIFF:
+                name, path = convert_tiff_to_jpeg(path)
+            elif file_ext != '.mpo' and (g.REMOVE_ALPHA_CHANNEL or g.NORMALIZE_EXIF):
+                img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
+                sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
+
             res_batch_names.append(name)
             res_batch_paths.append(path)
         except Exception as e:
@@ -52,7 +68,9 @@ def get_datasets_images_map(dir_info: list) -> tuple:
     for file_info in dir_info:
         full_path_file = file_info["path"]
         try:
-            sly.image.validate_ext(full_path_file)
+            file_ext = get_file_ext(full_path_file)
+            if file_ext not in g.SUPPORTED_IMG_EXTS:
+                sly.image.validate_ext(full_path_file)
         except Exception as e:
             sly.logger.warn("File skipped {!r}: error occurred during processing {!r}".format(full_path_file, str(e)))
             continue

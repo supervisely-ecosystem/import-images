@@ -11,7 +11,9 @@
   "modal_template": "src/modal.html",
   "modal_template_state": {
     "normalize_exif": false,
-    "remove_alpha_channel": false
+    "remove_alpha_channel": false,
+    "convert_tiff": false,
+    "remove_source": true
   },
   "task_location": "workspace_tasks",
   "icon": "https://i.imgur.com/mDH9HA3.png",
