@@ -32,10 +32,9 @@ def import_images(api: sly.Api):
                 message="Dataset: {!r}".format(dataset_name),
         ):
             if g.NEED_DOWNLOAD:
-                res_batch_names, res_batch_paths = f.normalize_exif_and_remove_alpha_channel(api, batch_names, batch_paths, batch_hashes)
+                res_batch_names, res_batch_paths, local_save_dir = f.normalize_exif_and_remove_alpha_channel(api, batch_names, batch_paths, batch_hashes)
                 api.image.upload_paths(dataset_info.id, res_batch_names, res_batch_paths)
-                for path in res_batch_paths:
-                    sly.fs.silent_remove(path)
+                sly.fs.remove_dir(local_save_dir)
             else:
                 try:
                     api.image.upload_hashes(
