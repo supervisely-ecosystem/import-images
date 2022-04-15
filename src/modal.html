@@ -7,4 +7,7 @@
     <div class="mt10">
         <el-checkbox v-model="state.remove_alpha_channel">remove alpha channel</el-checkbox>
     </div>
+    <pre>
+        {{ JSON.stringify(state, undefined, 2) }}
+    </pre>
 </sly-field>

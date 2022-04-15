@@ -10,7 +10,7 @@ progress_bar = SlyTqdm()
 
 
 @sly.timeit
-def import_images_from_team_files(api: sly.Api):
+def import_images(api: sly.Api):
     dir_info = api.file.list(g.TEAM_ID, g.INPUT_PATH)
     project_name = f.get_project_name_from_input_path(g.INPUT_PATH)
     datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info)
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         },
     )
 
-    import_images_from_team_files(g.api)
+    import_images(g.api)
     try:
         sly.app.fastapi.shutdown()
     except KeyboardInterrupt:

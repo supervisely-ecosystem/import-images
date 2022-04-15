@@ -27,7 +27,8 @@ def get_dataset_name(file_path: str) -> str:
         return f"{path_parts[-3]}_{path_parts[-2]}"
 
 
-def normalize_exif_and_remove_alpha_channel(api, names, paths, hashes):
+def normalize_exif_and_remove_alpha_channel(api: sly.Api, names: list, paths: list, hashes: list) -> tuple:
+    """If flags normalize exif or remove alpha channel set to True, download and process images with corresponding flags."""
     res_batch_names = []
     res_batch_paths = []
     app_batch_paths = [f"{g.STORAGE_DIR}{batch_path}" for batch_path in paths]
