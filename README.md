@@ -1,6 +1,6 @@
 
 <div align="center" markdown>
-<img src=""/>  
+<img src="https://i.imgur.com/bgCPgfa.png"/>  
 
 # Import Images
 
@@ -61,6 +61,10 @@ As a result we will get project `my_images_project` with four datasets with the 
 **Step 2.** Run the application from the context menu of the directory with images on Team Files page
 
 <img src="https://i.imgur.com/0DF8igu.png" width="80%" style='padding-top: 10px'>  
+
+**Step 3.** Select options and press the Run button
+
+<img src="https://i.imgur.com/4SuWPGg.png" width="80%" style='padding-top: 10px'>  
 
 ### Demo
 Example of uploading a flat set of images:
