@@ -48,10 +48,10 @@ def normalize_exif_and_remove_alpha_channel(api: sly.Api, names: list, paths: li
     api.file.download_directory(g.TEAM_ID, remote_path=remote_ds_dir, local_save_path=local_save_dir)
     for name, path in zip(names, app_batch_paths):
         try:
-            file_ext = get_file_ext(path)
+            file_ext = get_file_ext(path).lower()
             if file_ext == '.tiff' and g.CONVERT_TIFF:
                 name, path = convert_tiff_to_jpeg(path)
-            else:
+            elif file_ext != '.mpo' and (g.REMOVE_ALPHA_CHANNEL or g.NORMALIZE_EXIF):
                 img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
                 sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
 
