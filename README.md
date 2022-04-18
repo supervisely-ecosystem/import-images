@@ -31,7 +31,7 @@ Supported images formats: `.jpg`, `.jpeg`, `.bmp`, `.png`, `.webp`, `.mpo`, `.ti
 
 #### Input files structure
 
-You have to drag and drop one directory with images. Directory name defines project name, subdirectories define dataset names. Images in root directory will be moved to dataset with name "`ds0`".
+Directory name defines project name, subdirectories define dataset names. Images in root directory will be moved to dataset with name "`ds0`".
  
 ```
 .
@@ -52,7 +52,7 @@ my_images_project
     └── img_03.png
 ```
 
-As a result we will get project `my_images_project` with four datasets with the names: `ds0`, `my_folder1`, `my_folder1__my_folder2`, `my_folder3`.
+As a result we will get project `my_images_project` with 3 datasets with the names: `ds0`, `my_folder1`, `my_folder3`. Dataset `my_folder1` will also contain images from `my_folder2` directory.
 
 # How to Run
 
@@ -66,7 +66,7 @@ As a result we will get project `my_images_project` with four datasets with the 
 
 **Step 3.** Select options and press the Run button
 
-<img src="https://i.imgur.com/htdK6Xh.png" width="80%" style='padding-top: 10px'>  
+<img src="https://i.imgur.com/G6UjpD2.png" width="80%" style='padding-top: 10px'>  
 
 ### Demo
 Example of uploading a flat set of images:
