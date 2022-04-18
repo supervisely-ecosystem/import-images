@@ -1,5 +1,3 @@
-import os
-
 import supervisely as sly
 from supervisely.app.widgets import SlyTqdm
 
@@ -10,10 +8,11 @@ progress_bar = SlyTqdm()
 
 
 @sly.timeit
-def import_images(api: sly.Api):
+def import_images(api: sly.Api, task_id: int):
     dir_info = api.file.list(g.TEAM_ID, g.INPUT_PATH)
     if len(dir_info) == 0:
         raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
+
     project_name = f.get_project_name_from_input_path(g.INPUT_PATH)
     datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info)
 
@@ -24,31 +23,47 @@ def import_images(api: sly.Api):
         dataset_info = api.dataset.create(
             project_id=project.id, name=dataset_name, change_name_if_conflict=True
         )
+
         images_names = datasets_images_map[dataset_name]["img_names"]
         images_paths = datasets_images_map[dataset_name]["img_paths"]
         images_hashes = datasets_images_map[dataset_name]["img_hashes"]
-
         for batch_names, batch_paths, batch_hashes in progress_bar(
-                zip(sly.batched(images_names, 10), sly.batched(images_paths, 10), sly.batched(images_hashes, 10)),
-                total=len(images_hashes) // 10,
-                message="Dataset: {!r}".format(dataset_name),
+            zip(
+                sly.batched(images_names, 10),
+                sly.batched(images_paths, 10),
+                sly.batched(images_hashes, 10),
+            ),
+            total=len(images_hashes) // 10,
+            message="Dataset: {!r}".format(dataset_name),
         ):
             if g.NEED_DOWNLOAD:
-                res_batch_names, res_batch_paths, local_save_dir = f.normalize_exif_and_remove_alpha_channel(api, batch_names, batch_paths, batch_hashes)
-                api.image.upload_paths(dataset_info.id, res_batch_names, res_batch_paths)
+                res_batch_names, res_batch_paths, local_save_dir = f.normalize_exif_and_remove_alpha_channel(
+                    api, batch_names, batch_paths, batch_hashes
+                )
+                api.image.upload_paths(
+                    dataset_info.id, res_batch_names, res_batch_paths
+                )
                 sly.fs.remove_dir(local_save_dir)
             else:
                 try:
                     api.image.upload_hashes(
-                        dataset_id=dataset_info.id, names=batch_names, hashes=batch_hashes
+                        dataset_id=dataset_info.id,
+                        names=batch_names,
+                        hashes=batch_hashes,
                     )
                 except Exception as e:
                     sly.logger.warn(e)
 
     if g.REMOVE_SOURCE:
         api.file.remove(g.TEAM_ID, g.INPUT_PATH)
-        source_dir_name = g.INPUT_PATH.lstrip('/').rstrip('/')
-        sly.logger.info(f"Source directory: '{source_dir_name}' was successfully removed.")
+        source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
+        sly.logger.info(
+            f"Source directory: '{source_dir_name}' was successfully removed."
+        )
+
+    api.task.set_output_project(
+        task_id=task_id, project_id=project.id, project_name=project_name
+    )
 
 
 if __name__ == "__main__":
@@ -61,7 +76,7 @@ if __name__ == "__main__":
         },
     )
 
-    import_images(g.api)
+    import_images(g.api, g.TASK_ID)
     try:
         sly.app.fastapi.shutdown()
     except KeyboardInterrupt:

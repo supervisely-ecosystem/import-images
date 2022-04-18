@@ -1,13 +1,22 @@
 import os
-import pathlib
+import sys
+from distutils.util import strtobool
 
 import supervisely as sly
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from supervisely.app.fastapi import create
+from supervisely.imaging.image import SUPPORTED_IMG_EXTS
 
-app_root_directory = str(pathlib.Path(__file__).parent.absolute().parents[0])
-sly.logger.info(f"App root directory: {app_root_directory}")
+app_root_directory = os.path.dirname(os.getcwd())
+sys.path.append(app_root_directory)
+sys.path.append(os.path.join(app_root_directory, "src"))
+print(f"App root directory: {app_root_directory}")
 sly.logger.info(f'PYTHONPATH={os.environ.get("PYTHONPATH", "")}')
+
+# order matters
+load_dotenv(os.path.join(app_root_directory, "secret_debug.env"))
+load_dotenv(os.path.join(app_root_directory, "debug.env"))
 
 app = FastAPI()
 
@@ -15,18 +24,19 @@ sly_app = create()
 
 api = sly.Api.from_env()
 
+TASK_ID = int(os.environ["TASK_ID"])
 TEAM_ID = int(os.environ["context.teamId"])
 WORKSPACE_ID = int(os.environ["context.workspaceId"])
 INPUT_PATH = os.environ.get("modal.state.slyFolder", None)
 
-NORMALIZE_EXIF = os.getenv("modal.state.normalize_exif", 'False').lower() in ('true', '1', 't')
-REMOVE_ALPHA_CHANNEL = os.getenv("modal.state.remove_alpha_channel", 'False').lower() in ('true', '1', 't')
-CONVERT_TIFF = os.getenv("modal.state.convert_tiff", 'False').lower() in ('true', '1', 't')
+NORMALIZE_EXIF = bool(strtobool(os.getenv("modal.state.normalize_exif")))
+REMOVE_ALPHA_CHANNEL = bool(strtobool(os.getenv("modal.state.remove_alpha_channel")))
+CONVERT_TIFF = bool(strtobool(os.getenv("modal.state.convert_tiff")))
 NEED_DOWNLOAD = NORMALIZE_EXIF or REMOVE_ALPHA_CHANNEL or CONVERT_TIFF
-REMOVE_SOURCE = os.getenv("modal.state.remove_source", 'False').lower() in ('true', '1', 't')
+REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source")))
 
 DEFAULT_DATASET_NAME = "ds0"
-SUPPORTED_IMG_EXTS = [".jpg", ".jpeg", ".mpo", ".bmp", ".png", ".webp"]
+SUPPORTED_IMG_EXTS = SUPPORTED_IMG_EXTS
 if CONVERT_TIFF:
     SUPPORTED_IMG_EXTS.append(".tiff")
 STORAGE_DIR = os.path.join(app_root_directory, "debug", "data", "storage_dir")
