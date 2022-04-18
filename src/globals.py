@@ -32,7 +32,7 @@ INPUT_PATH = os.environ.get("modal.state.slyFolder", None)
 NORMALIZE_EXIF = bool(strtobool(os.getenv("modal.state.normalize_exif")))
 REMOVE_ALPHA_CHANNEL = bool(strtobool(os.getenv("modal.state.remove_alpha_channel")))
 CONVERT_TIFF = bool(strtobool(os.getenv("modal.state.convert_tiff")))
-NEED_DOWNLOAD = NORMALIZE_EXIF or REMOVE_ALPHA_CHANNEL or CONVERT_TIFF
+NEED_DOWNLOAD = NORMALIZE_EXIF or REMOVE_ALPHA_CHANNEL
 REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source")))
 
 DEFAULT_DATASET_NAME = "ds0"

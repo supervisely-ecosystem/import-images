@@ -17,34 +17,55 @@ def import_images(api: sly.Api, task_id: int):
     datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info)
 
     project = api.project.create(
-        workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
+        workspace_id=g.WORKSPACE_ID,
+        name=project_name,
+        change_name_if_conflict=True
     )
     for dataset_name in datasets_names:
         dataset_info = api.dataset.create(
-            project_id=project.id, name=dataset_name, change_name_if_conflict=True
+            project_id=project.id,
+            name=dataset_name,
+            change_name_if_conflict=True
         )
 
         images_names = datasets_images_map[dataset_name]["img_names"]
         images_paths = datasets_images_map[dataset_name]["img_paths"]
         images_hashes = datasets_images_map[dataset_name]["img_hashes"]
         for batch_names, batch_paths, batch_hashes in progress_bar(
-            zip(
-                sly.batched(images_names, 10),
-                sly.batched(images_paths, 10),
-                sly.batched(images_hashes, 10),
-            ),
-            total=len(images_hashes) // 10,
-            message="Dataset: {!r}".format(dataset_name),
+                zip(
+                    sly.batched(seq=images_names, batch_size=10),
+                    sly.batched(seq=images_paths, batch_size=10),
+                    sly.batched(seq=images_hashes, batch_size=10),
+                ),
+                total=len(images_hashes) // 10,
+                message="Dataset: {!r}".format(dataset_name),
         ):
             if g.NEED_DOWNLOAD:
                 res_batch_names, res_batch_paths, local_save_dir = f.normalize_exif_and_remove_alpha_channel(
-                    api, batch_names, batch_paths, batch_hashes
+                    api=api,
+                    names=batch_names,
+                    paths=batch_paths,
+                    hashes=batch_hashes,
                 )
                 api.image.upload_paths(
-                    dataset_info.id, res_batch_names, res_batch_paths
+                    dataset_id=dataset_info.id,
+                    names=res_batch_names,
+                    paths=res_batch_paths,
                 )
-                sly.fs.remove_dir(local_save_dir)
+                sly.fs.remove_dir(dir_=local_save_dir)
             else:
+                if g.CONVERT_TIFF:
+                    tiff_names, tiff_paths = f.process_tiff_images(
+                        api=api,
+                        batch_names=batch_names,
+                        batch_paths=batch_paths,
+                        batch_hashes=batch_hashes,
+                    )
+                    api.image.upload_paths(
+                        dataset_id=dataset_info.id,
+                        names=tiff_names,
+                        paths=tiff_paths,
+                    )
                 try:
                     api.image.upload_hashes(
                         dataset_id=dataset_info.id,
@@ -52,13 +73,13 @@ def import_images(api: sly.Api, task_id: int):
                         hashes=batch_hashes,
                     )
                 except Exception as e:
-                    sly.logger.warn(e)
+                    sly.logger.warn(msg=e)
 
     if g.REMOVE_SOURCE:
-        api.file.remove(g.TEAM_ID, g.INPUT_PATH)
+        api.file.remove(team_id=g.TEAM_ID, path=g.INPUT_PATH)
         source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
         sly.logger.info(
-            f"Source directory: '{source_dir_name}' was successfully removed."
+            msg=f"Source directory: '{source_dir_name}' was successfully removed."
         )
 
     api.task.set_output_project(
