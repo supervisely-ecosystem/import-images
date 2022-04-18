@@ -28,7 +28,8 @@ def get_dataset_name(file_path: str) -> str:
         return f"{path_parts[-3]}_{path_parts[-2]}"
 
 
-def convert_tiff_to_jpeg(path):
+def convert_tiff_to_jpeg(path: str) -> tuple:
+    """Convert .tiff image format to .jpeg."""
     name = f"{get_file_name(path)}.jpg"
     img = Image.open(path)
     path = f"{os.path.dirname(path)}/{name}"
@@ -40,7 +41,10 @@ def convert_tiff_to_jpeg(path):
 def normalize_exif_and_remove_alpha_channel(
     api: sly.Api, names: list, paths: list, hashes: list
 ) -> tuple:
-    """If flags normalize exif or remove alpha channel set to True, download and process images with corresponding flags."""
+    """
+    If flags normalize exif, remove alpha channel or convert .tiff to .jpeg set to True,
+    download and process images with corresponding flags.
+    """
     res_batch_names = []
     res_batch_paths = []
     app_batch_paths = [f"{g.STORAGE_DIR}{batch_path}" for batch_path in paths]
