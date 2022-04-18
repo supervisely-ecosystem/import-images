@@ -1,16 +1,39 @@
-<sly-field title="Import settings"
-           description="If images you import has exif rotation or they look rotated in labeling interfaces please enable
-           normalize exif. If your images have alpha channel, enable remove alpha channel">
-    <div class="mt10">
-        <el-checkbox v-model="state.normalize_exif">normalize exif</el-checkbox>
+<sly-field title="Import settings">
+
+    <div class="fflex align-start">
+        <el-checkbox v-model="state.normalize_exif" class="mt10 mr10"></el-checkbox>
+        <sly-field class="mt20"
+                   title="normalize exif"
+                   description="If images you import has exif rotation or they look rotated in labeling interfaces please enable
+           normalize exif">
+        </sly-field>
     </div>
-    <div class="mt10">
-        <el-checkbox v-model="state.remove_alpha_channel">remove alpha channel</el-checkbox>
+
+
+    <div class="fflex align-start">
+        <el-checkbox v-model="state.remove_alpha_channel" class="mt10 mr10"></el-checkbox>
+        <sly-field class="mt20"
+                   title="remove alpha channel"
+                   description="If your images have alpha channel, enable remove alpha channel">
+        </sly-field>
     </div>
-    <div class="mt10">
-        <el-checkbox v-model="state.convert_tiff">convert .tiff to .jpeg</el-checkbox>
+
+
+    <div class="fflex align-start">
+        <el-checkbox v-model="state.convert_tiff" class="mt10 mr10"></el-checkbox>
+        <sly-field class="mt20"
+                   title="convert .tiff to .jpeg"
+                   description="Supervisely currently doesn't support .tiff image format, but if you want to import
+                .tiff images, enable 'convert .tiff to .jpeg'">
+        </sly-field>
     </div>
-    <div class="mt10">
-        <el-checkbox v-model="state.remove_source">remove files after successful import</el-checkbox>
+
+    <div class="fflex align-start">
+        <el-checkbox v-model="state.remove_source" class="mt10 mr10"></el-checkbox>
+        <sly-field class="mt20"
+                   title="remove files after successful import"
+                   description="Automatically removes source directory after successfull import">
+        </sly-field>
     </div>
+
 </sly-field>
