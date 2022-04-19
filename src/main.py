@@ -83,7 +83,7 @@ def import_images(api: sly.Api, task_id: int):
         )
 
     api.task.set_output_project(
-        task_id=task_id, project_id=project.id, project_name=project_name
+        task_id=task_id, project_id=project.id, project_name=project.name
     )
 
 
