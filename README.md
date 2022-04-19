@@ -70,4 +70,4 @@ As a result we will get project `my_images_project` with 3 datasets with the nam
 
 ### Demo
 Example of uploading a flat set of images:
-![](https://i.imgur.com/4v8NRCK.gif)
+![](https://i.imgur.com/EkLt9ii.gif)
