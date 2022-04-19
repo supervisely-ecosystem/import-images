@@ -29,9 +29,9 @@ def get_project_name_from_input_path(input_path: str) -> str:
 #         return f"{path_parts[-3]}_{path_parts[-2]}"
 
 
-def convert_tiff_to_jpeg(path: str) -> tuple:
+def convert_tiff_to_jpeg(name, path: str) -> tuple:
     """Convert .tiff image format to .jpeg."""
-    name = f"{get_file_name(path)}.jpg"
+    name = f"{get_file_name(name)}.jpg"
     img = Image.open(path)
     path = f"{os.path.dirname(path)}/{name}"
     img = img.convert("RGB")
@@ -55,7 +55,7 @@ def process_tiff_images(
                 remote_path=image_path,
                 local_save_path=local_save_path,
             )
-            tiff_name, tiff_path = convert_tiff_to_jpeg(local_save_path)
+            tiff_name, tiff_path = convert_tiff_to_jpeg(image_name, local_save_path)
             tiff_names.append(tiff_name)
             tiff_paths.append(tiff_path)
             batch_names.remove(image_name)
