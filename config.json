@@ -18,6 +18,7 @@
   "task_location": "workspace_tasks",
   "icon": "https://i.imgur.com/mDH9HA3.png",
   "icon_background": "#FFFFFF",
+  "instance_version": "6.4.45",
   "headless": true,
   "context_menu": {
     "target": ["files_folder"]

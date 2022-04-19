@@ -1,9 +1,9 @@
 import os
-import pathlib
 
 import supervisely as sly
 from PIL import Image
-from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ext
+from supervisely.io.fs import (get_file_ext, get_file_name,
+                               get_file_name_with_ext)
 from supervisely.video.import_utils import get_dataset_name
 
 import globals as g
@@ -15,23 +15,19 @@ def get_project_name_from_input_path(input_path: str) -> str:
     return os.path.basename(full_path_dir)
 
 
-# def get_dataset_name(file_path: str) -> str:
-#     """Returns dataset name from file path."""
-#     full_path_dir = f"{os.path.dirname(file_path)}/"
-#     relative_path = os.path.relpath(g.INPUT_PATH, full_path_dir)
-#     path_parts = pathlib.Path(file_path).parts
-#     if relative_path == ".":
-#         return g.DEFAULT_DATASET_NAME
-#     elif relative_path == "..":
-#         return path_parts[-2]
-#     else:
-#         path_parts = pathlib.Path(file_path).parts
-#         return f"{path_parts[-3]}_{path_parts[-2]}"
+def download_project(api, input_path):
+    """Download target directory from Team Files if NEED_DOWNLOAD is True."""
+    remote_proj_dir = input_path
+    local_save_dir = f"{g.STORAGE_DIR}{remote_proj_dir}/"
+    api.file.download_directory(
+        g.TEAM_ID, remote_path=remote_proj_dir, local_save_path=local_save_dir
+    )
+    return local_save_dir
 
 
 def convert_tiff_to_jpeg(name, path: str) -> tuple:
     """Convert .tiff image format to .jpeg."""
-    name = f"{get_file_name(name)}.jpg"
+    name = f"{get_file_name(name)}.tiff.jpg"
     img = Image.open(path)
     path = f"{os.path.dirname(path)}/{name}"
     img = img.convert("RGB")
@@ -42,7 +38,7 @@ def convert_tiff_to_jpeg(name, path: str) -> tuple:
 def process_tiff_images(
     api: sly.Api, batch_names: list, batch_paths: list, batch_hashes: list
 ) -> tuple:
-    """Detect and convert .tiff images in dataset if NEED_DOWNLOAD is false."""
+    """Detect and convert .tiff images in dataset if NEED_DOWNLOAD is False."""
     tiff_names = []
     tiff_paths = []
     for image_name, image_path, images_hash in zip(
@@ -61,29 +57,21 @@ def process_tiff_images(
             batch_names.remove(image_name)
             batch_paths.remove(image_path)
             batch_hashes.remove(images_hash)
-    return tiff_names, tiff_paths
+    return tiff_names, tiff_paths, batch_names, batch_hashes
 
 
-def normalize_exif_and_remove_alpha_channel(
-    api: sly.Api, names: list, paths: list, hashes: list
-) -> tuple:
+def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     """
     If flags normalize exif, remove alpha channel or convert .tiff to .jpeg set to True,
     download and process images with corresponding flags.
     """
     res_batch_names = []
     res_batch_paths = []
-    app_batch_paths = [f"{g.STORAGE_DIR}{batch_path}" for batch_path in paths]
-    remote_ds_dir = f"{os.path.dirname(paths[0])}/"
-    local_save_dir = f"{g.STORAGE_DIR}{remote_ds_dir}/"
-    api.file.download_directory(
-        g.TEAM_ID, remote_path=remote_ds_dir, local_save_path=local_save_dir
-    )
-    for name, path in zip(names, app_batch_paths):
+    for name, path in zip(names, paths):
         try:
             file_ext = get_file_ext(path).lower()
             if file_ext == ".tiff" and g.CONVERT_TIFF:
-                name, path = convert_tiff_to_jpeg(path)
+                name, path = convert_tiff_to_jpeg(name, path)
             elif file_ext != ".mpo" and (g.REMOVE_ALPHA_CHANNEL or g.NORMALIZE_EXIF):
                 img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
                 sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
@@ -93,7 +81,7 @@ def normalize_exif_and_remove_alpha_channel(
             sly.logger.warning(
                 "Skip image {!r}: {}".format(name, str(e)), extra={"file_path": path}
             )
-    return res_batch_names, res_batch_paths, local_save_dir
+    return res_batch_names, res_batch_paths
 
 
 def get_datasets_images_map(dir_info: list) -> tuple:

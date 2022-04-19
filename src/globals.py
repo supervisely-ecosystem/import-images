@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from supervisely.app.fastapi import create
 from supervisely.imaging.image import SUPPORTED_IMG_EXTS
+from supervisely.io.fs import mkdir
 
 app_root_directory = os.path.dirname(os.getcwd())
 sys.path.append(app_root_directory)
@@ -37,6 +38,8 @@ REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source")))
 
 DEFAULT_DATASET_NAME = "ds0"
 SUPPORTED_IMG_EXTS = SUPPORTED_IMG_EXTS
+SUPPORTED_IMG_EXTS.remove(".nrrd")
 if CONVERT_TIFF:
     SUPPORTED_IMG_EXTS.append(".tiff")
 STORAGE_DIR = os.path.join(app_root_directory, "debug", "data", "storage_dir")
+mkdir(STORAGE_DIR, True)
