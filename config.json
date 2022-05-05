@@ -21,6 +21,9 @@
   "instance_version": "6.4.45",
   "headless": true,
   "context_menu": {
-    "target": ["files_folder"]
-  }
+    "target": [
+      "files_folder"
+    ]
+  },
+  "poster": "https://i.imgur.com/bgCPgfa.png"
 }
