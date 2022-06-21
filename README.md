@@ -1,6 +1,6 @@
 
 <div align="center" markdown>
-<img src="https://i.imgur.com/bgCPgfa.png"/>  
+<img src="https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/poster.png"/>  
 
 # Import Images
 
