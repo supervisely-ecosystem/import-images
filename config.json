@@ -15,7 +15,7 @@
     "remove_alpha_channel": false,
     "convert_tiff": false,
     "remove_source": true,
-    "projectName": None,
+    "projectName": null,
   },
   "task_location": "workspace_tasks",
   "icon": "https://i.imgur.com/mDH9HA3.png",
