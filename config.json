@@ -6,7 +6,7 @@
     "images",
     "essentials"
   ],
-  "description": "Import images without annotations from Team Files",
+  "description": "Import Images without annotations to Supervisely",
   "docker_image": "supervisely/base-py-sdk:6.14.0",
   "main_script": "src/main.py",
   "modal_template": "src/modal.html",
