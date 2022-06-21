@@ -18,7 +18,8 @@
     "project_name": ""
   },
   "task_location": "workspace_tasks",
-  "icon": "https://i.imgur.com/mDH9HA3.png",
+  "icon": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/icon.png",
+  "icon_cover": true,
   "icon_background": "#FFFFFF",
   "instance_version": "6.4.45",
   "headless": true,
@@ -27,5 +28,5 @@
       "files_folder"
     ]
   },
-  "poster": "https://i.imgur.com/bgCPgfa.png"
+  "poster": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/poster.png"
 }
