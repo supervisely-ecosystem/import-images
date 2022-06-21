@@ -15,7 +15,7 @@ def import_images(api: sly.Api, task_id: int):
     if len(dir_info) == 0:
         raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
 
-    project_name = f.get_project_name_from_input_path(g.INPUT_PATH)
+    project_name = f.get_project_name_from_input_path(g.INPUT_PATH) if len(g.OUTPUT_PROJECT_NAME) == 0 else g.OUTPUT_PROJECT_NAME
 
     if g.NEED_DOWNLOAD:
         f.download_project(api, g.INPUT_PATH)
