@@ -1,10 +1,10 @@
-<sly-field title="Import settings">
+<div>
     <div class="fflex align-start" style="flex-direction: column; margin: 20px 0">
       <sly-field 
-                   title="Project Name"
-                   description="Adjust Project Name that will be created">
+                   title="Result Project Name"
+                   description="Enter project name manually (optional) or keep empty to generate it automatically">
       </sly-field>
-      <el-input placeholder="Project Name" v-model="state.project_name"></el-input>
+      <el-input placeholder="Enter Project Name" v-model="state.project_name"></el-input>
         
     </div>
 
@@ -42,4 +42,4 @@
         </sly-field>
     </div>
 
-</sly-field>
+</div>
