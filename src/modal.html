@@ -6,17 +6,15 @@
 
         state: {{ state }}
 
-        <sly-field title="Debug 1 Length of random string"
-                   description="Choose length of generated strings before running app">
-            <sly-file-storage-upload v-if="context.slyProjectId"
-                                     :options="{ folder: '/import/import-images-app/' + context.formId + '/' }"
-                                     @files-uploaded="state.files = '/import/import-images-app/' + context.formId + '/'">
-            </sly-file-storage-upload>
-        </sly-field>
+        <sly-file-storage-upload v-if="context.slyProjectId"
+                                 :options="{ folder: '/import/import-images-app/' + context.formId + '/' }"
+                                 @files-uploaded="state.files = '/import/import-images-app/' + context.formId + '/'">
+        </sly-file-storage-upload>
     </div>
 
 
-    <div class="fflex align-start" style="flex-direction: column; margin: 0 0 20px 0">
+    <div class="fflex align-start" style="flex-direction: column; margin: 0 0 20px 0"
+         v-if="context.slyProjectId === null">
         <sly-field
                 title="Result Project Name"
                 description="Enter project name manually (optional) or keep empty to generate it automatically">

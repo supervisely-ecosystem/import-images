@@ -24,7 +24,6 @@ def import_images(api: sly.Api, task_id: int):
     else:
         project = api.project.get_info_by_id(g.PROJECT_ID)
 
-
     if g.NEED_DOWNLOAD:
         f.download_project(api, g.INPUT_PATH)
 
@@ -118,3 +117,8 @@ if __name__ == "__main__":
         sly.app.fastapi.shutdown()
     except KeyboardInterrupt:
         sly.logger.info("Application shutdown successfully")
+
+# context: {"formId": "71a70faa-837e-493b-97b8-131d92a79442", "userId": 7, "teamId": 8, "workspaceId": 349,
+#           "slyProjectId": 12069, "slyProjectName": "Lemons (Test)", "projectId": 12069}
+# state: {"convert_tiff": false, "project_name": "", "remove_source": true, "normalize_exif": false,
+#         "remove_alpha_channel": false, "slyProjectId": 12069, "slyProjectName": "Lemons (Test)"}
