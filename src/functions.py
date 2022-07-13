@@ -1,11 +1,9 @@
 import os
-
+import pathlib
 import supervisely as sly
 from PIL import Image
 from supervisely.io.fs import (get_file_ext, get_file_name,
                                get_file_name_with_ext)
-from supervisely.video.import_utils import get_dataset_name
-
 import globals as g
 
 
@@ -130,3 +128,12 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
 
     datasets_names = list(datasets_images_map.keys())
     return datasets_names, datasets_images_map
+
+
+def get_dataset_name(file_path, default="ds0"):
+    dir_path = os.path.split(file_path)[0]
+    ds_name = default
+    path_parts = pathlib.Path(dir_path).parts
+    if len(path_parts) != 1:
+        ds_name = path_parts[3]
+    return ds_name
