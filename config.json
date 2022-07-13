@@ -11,6 +11,7 @@
   "main_script": "src/main.py",
   "modal_template": "src/modal.html",
   "modal_template_state": {
+    "files": "",
     "normalize_exif": false,
     "remove_alpha_channel": false,
     "convert_tiff": false,
