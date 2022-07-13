@@ -6,7 +6,7 @@
     "images",
     "essentials"
   ],
-  "description": "Import Images without annotations to Supervisely",
+  "description": "Drag and drop images to Supervisely, available image formats: .jpg, .jpeg, .mpo, .bmp, .png, .webp, .nrrd",
   "docker_image": "supervisely/base-py-sdk:6.14.0",
   "main_script": "src/main.py",
   "modal_template": "src/modal.html",
@@ -25,7 +25,9 @@
   "headless": true,
   "context_menu": {
     "target": [
-      "files_folder"
+      "files_folder",
+      "images_project",
+      "images_dataset"
     ]
   },
   "poster": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/poster.png"

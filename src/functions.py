@@ -36,13 +36,13 @@ def convert_tiff_to_jpeg(name, path: str) -> tuple:
 
 
 def process_tiff_images(
-    api: sly.Api, batch_names: list, batch_paths: list, batch_hashes: list
+        api: sly.Api, batch_names: list, batch_paths: list, batch_hashes: list
 ) -> tuple:
     """Detect and convert .tiff images in dataset if NEED_DOWNLOAD is False."""
     tiff_names = []
     tiff_paths = []
     for image_name, image_path, images_hash in zip(
-        batch_names, batch_paths, batch_hashes
+            batch_names, batch_paths, batch_hashes
     ):
         if image_path.endswith(".tiff"):
             local_save_path = f"{g.STORAGE_DIR}{image_path}"
@@ -84,7 +84,7 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     return res_batch_names, res_batch_paths
 
 
-def get_datasets_images_map(dir_info: list) -> tuple:
+def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
     """Creates a dictionary map based on api response from the target sly folder data."""
     datasets_images_map = {}
     for file_info in dir_info:
@@ -104,6 +104,8 @@ def get_datasets_images_map(dir_info: list) -> tuple:
         file_name = get_file_name_with_ext(full_path_file)
         file_hash = file_info["hash"]
         ds_name = get_dataset_name(full_path_file.lstrip("/"))
+        if dataset_name is not None:
+            ds_name = dataset_name
         if ds_name not in datasets_images_map.keys():
             datasets_images_map[ds_name] = {
                 "img_names": [],
