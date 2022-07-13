@@ -14,6 +14,7 @@ def import_images(api: sly.Api, task_id: int):
     sly.logger.info(f"INPUT PATH: {g.INPUT_PATH}")
     sly.logger.info(f"PROJECT_ID: {g.PROJECT_ID}")
     sly.logger.info(f"DATASET_ID: {g.DATASET_ID}")
+
     dir_info = api.file.list(g.TEAM_ID, g.INPUT_PATH)
     if len(dir_info) == 0:
         raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
@@ -45,6 +46,7 @@ def import_images(api: sly.Api, task_id: int):
         images_names = datasets_images_map[dataset_name]["img_names"]
         images_hashes = datasets_images_map[dataset_name]["img_hashes"]
         images_paths = datasets_images_map[dataset_name]["img_paths"]
+
         if g.NEED_DOWNLOAD:
             images_paths = [
                 os.path.join(g.STORAGE_DIR, image_path.lstrip("/"))
@@ -56,7 +58,7 @@ def import_images(api: sly.Api, task_id: int):
                     sly.batched(seq=images_paths, batch_size=10),
                     sly.batched(seq=images_hashes, batch_size=10),
                 ),
-                total=len(images_hashes) // 10,
+                total=len(images_hashes),
                 message="Dataset: {!r}".format(dataset_name),
         ):
             if g.NEED_DOWNLOAD:
