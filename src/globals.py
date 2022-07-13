@@ -33,9 +33,9 @@ PROJECT_ID = None
 DATASET_ID = None
 
 if os.environ.get('context.slyProjectId') is not None:
-    PROJECT_ID = int(os.environ.get('modal.state.slyProjectId'))
+    PROJECT_ID = int(os.environ.get('context.slyProjectId'))
 if os.environ.get('context.slyDatasetId') is not None:
-    DATASET_ID = int(os.environ.get('modal.state.slyDatasetId'))
+    DATASET_ID = int(os.environ.get('context.slyDatasetId'))
 
 # INPUT_PATH = os.environ.get("modal.state.slyFolder", None)
 INPUT_PATH = os.environ.get("state.files", None)
