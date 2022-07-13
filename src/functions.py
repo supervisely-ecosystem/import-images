@@ -104,7 +104,10 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
         if dataset_name is not None:
             ds_name = dataset_name
         else:
-            ds_name = get_dataset_name(full_path_file.lstrip("/"))
+            try:
+                ds_name = get_dataset_name(full_path_file.lstrip("/"))
+            except:
+                ds_name = g.DEFAULT_DATASET_NAME
 
         if ds_name not in datasets_images_map.keys():
             datasets_images_map[ds_name] = {
