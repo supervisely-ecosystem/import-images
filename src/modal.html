@@ -14,13 +14,12 @@
 
 
     <div class="fflex align-start" style="flex-direction: column; margin: 0 0 20px 0"
-         v-if="context.slyProjectId === null">
+         v-if="!context.slyProjectId">
         <sly-field
                 title="Result Project Name"
                 description="Enter project name manually (optional) or keep empty to generate it automatically">
         </sly-field>
         <el-input placeholder="Enter Project Name" v-model="state.project_name"></el-input>
-
     </div>
 
     <div class="fflex align-start">
