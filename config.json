@@ -25,7 +25,9 @@
   "headless": true,
   "context_menu": {
     "target": [
-      "files_folder"
+      "files_folder",
+      "images_project",
+      "images_dataset"
     ]
   },
   "poster": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/poster.png"
