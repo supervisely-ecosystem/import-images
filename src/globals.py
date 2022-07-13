@@ -37,7 +37,8 @@ if os.environ.get('context.slyProjectId') is not None:
 if os.environ.get('context.slyDatasetId') is not None:
     DATASET_ID = int(os.environ.get('modal.state.slyDatasetId'))
 
-INPUT_PATH = os.environ.get("modal.state.slyFolder", None)
+# INPUT_PATH = os.environ.get("modal.state.slyFolder", None)
+INPUT_PATH = os.environ.get("state.files", None)
 OUTPUT_PROJECT_NAME = os.environ.get("modal.state.project_name", "")
 
 NORMALIZE_EXIF = bool(strtobool(os.getenv("modal.state.normalize_exif")))
