@@ -58,9 +58,10 @@ As a result we will get project with 3 datasets with the names: `ds0`, `my_folde
 # How to Run
 
 App can be launched from ecosystem, team files, images project and images dataset
-* running the app from ecosystem you will be given options to create new project, upload images to existing project or existing dataset
-* running the app from team files will result in new project
-* running the app from images project or dataset will upload images to existing project or dataset, from which it was launched
+* [running the app from ecosystem](#run-from-ecosystem) you will be given options to create new project, upload images to existing project or existing dataset
+* [running the app from team files](#run-from-team-files) will result in new project
+* [running the app from images project](#run-from-images-project) will upload images to existing project, from which it was launched
+* [running the app from images dataset](#run-from-images-dataset) will upload images to existing dataset, from which it was launched
 
 ## Run from Ecosystem
 
