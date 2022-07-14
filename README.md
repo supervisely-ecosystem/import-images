@@ -22,17 +22,17 @@
 # Overview
 
 This app allows you to upload only images without any annotations. By default, flags "normalize exif", "remove alpha channel" and "convert .tiff to .jpeg" are disabled. 
-If images you import has exif rotation, or they look rotated in labeling interfaces please enable "normalize exif" flag in the modal window.
+If images you import have exif rotation, or they look rotated in labeling interfaces please enable "normalize exif" flag in the modal window.
 If your images have alpha channel, enable "remove alpha channel" flag. 
 Supervisely currently doesn't support `.tiff` image format, but if you want to import `.tiff` images, enable "convert .tiff to .jpeg" flag in the modal window. 
 Be aware that "remove files after successful import" flag is enabled by default, it will automatically remove source directory after import. 
-Images in `.nrrd` format can be viewed in Annotation Tool v2 only.
+Images in `.nrrd` format can be viewed in annotation tool v2 only.
 
-Supported images formats: `.jpg`, `.jpeg`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`(enable flag), `.nrrd`(Annotation Tool v2 only)'
+Supported images formats: `.jpg`, `.jpeg`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`(enable flag), `.nrrd`(annotation tool v2 only)'
 
 #### Input files structure
 
-Directory name defines project name, subdirectories define dataset names. Images in root directory will be moved to dataset with name "`ds0`".
+directories define dataset names. Images in root directory will be moved to dataset with name "`ds0`".
  
 ```
 .
@@ -53,22 +53,60 @@ my_images_project
     └── img_03.png
 ```
 
-As a result we will get project `my_images_project` with 3 datasets with the names: `ds0`, `my_folder1`, `my_folder3`. Dataset `my_folder1` will also contain images from `my_folder2` directory.
+As a result we will get project with 3 datasets with the names: `ds0`, `my_folder1`, `my_folder3`. Dataset `my_folder1` will also contain images from `my_folder2` directory.
 
 # How to Run
 
-**Step 1.** Add [Import Images](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/import-images) app to your team from Ecosystem
+App can be launched from ecosystem, team files, images project and images dataset
+* running the app from ecosystem you will be given options to create new project, upload images to existing project or existing dataset
+* running the app from team files will result in new project
+* running the app from images project or dataset will upload images to existing project or dataset, from which it was launched
 
-<img data-key="sly-module-link" data-module-slug="supervisely-ecosystem/import-images" src="https://i.imgur.com/7dfX1s2.png" width="350px" style='padding-bottom: 10px'/>
+## Run from Ecosystem
 
-**Step 2.** Run the application from the context menu of the directory with images on Team Files page
+**Step 1.** Run the app from Ecosystem
 
-<img src="https://i.imgur.com/0DF8igu.png" width="80%" style='padding-top: 10px'>  
+<img src="https://user-images.githubusercontent.com/48913536/178972013-f3d04518-6014-43c2-bc79-53813040331a.png" width="80%" style='padding-top: 10px'>  
 
-**Step 3.** Select options and press the Run button
+**Step 2.** Drag & drop folder or images files, select options and press the Run button
 
-<img src="https://i.imgur.com/G6UjpD2.png" width="80%" style='padding-top: 10px'>  
+<img src="https://user-images.githubusercontent.com/48913536/178972034-ea4ad77b-015a-4a4c-a065-3ffcef554296.png" width="80%" style='padding-top: 10px'>
+
+## Run from Team Files
+
+**Step 1.** Run the application from the context menu of the directory with images on Team Files page
+
+<img src="https://user-images.githubusercontent.com/48913536/178972045-d2cb63bc-71e9-4fb5-8da0-5fa31511e614.png" width="80%" style='padding-top: 10px'>  
+
+**Step 2.** Select options and press the Run button
+
+<img src="https://user-images.githubusercontent.com/48913536/178972052-4bbc403e-b10a-4abc-91d2-fa0698b01a0a.png" width="80%" style='padding-top: 10px'>
+
+## Run from Images Project
+
+**Step 1.** Run the application from the context menu of the Images Project
+
+<img src="https://user-images.githubusercontent.com/48913536/178972065-6b8f0ef6-9e7a-4753-9765-93ee6995fa7f.png" width="80%" style='padding-top: 10px'>  
+
+**Step 2.** Drag & drop folder or images files, select options and press the Run button
+
+<img src="https://user-images.githubusercontent.com/48913536/178972073-9bb47ed4-e859-4fb8-b8ee-dc7e40f9b49a.png" width="80%" style='padding-top: 10px'>
+
+## Run from Images Dataset
+
+**Step 1.** Run the application from the context menu of the Images Dataset
+
+<img src="https://user-images.githubusercontent.com/48913536/178972085-69ffc5c7-02ee-43f2-a6fa-4eb74160496a.png" width="80%" style='padding-top: 10px'>  
+
+**Step 2.** Drag & drop folder or images files, select options and press the Run button
+
+<img src="https://user-images.githubusercontent.com/48913536/178972098-d5c8632c-4489-435a-9909-73c77ae6f656.png" width="80%" style='padding-top: 10px'>
+
+## Result
+
+<img src="https://user-images.githubusercontent.com/48913536/178972113-4d53f0dc-6323-4721-9ec2-f09de16ad0bc.png" width="80%" style='padding-top: 10px'>
 
 ### Demo
-Example of uploading a flat set of images:
+Example of uploading a flat set of images to Team Files:
+
 ![](https://i.imgur.com/EkLt9ii.gif)
