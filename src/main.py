@@ -119,19 +119,3 @@ if __name__ == "__main__":
         sly.app.fastapi.shutdown()
     except KeyboardInterrupt:
         sly.logger.info("Application shutdown successfully")
-
-# context: {"formId": "71a70faa-837e-493b-97b8-131d92a79442", "userId": 7, "teamId": 8, "workspaceId": 349,
-#           "slyProjectId": 12069, "slyProjectName": "Lemons (Test)", "projectId": 12069}
-# state: {"convert_tiff": false, "project_name": "", "remove_source": true, "normalize_exif": false,
-#         "remove_alpha_channel": false, "slyProjectId": 12069, "slyProjectName": "Lemons (Test)"}
-
-
-# context: {"formId": "8eb624e4-46a7-44bc-8660-987b6b62de91", "userId": 7, "teamId": 8, "workspaceId": 349,
-#           "files": "/import/import-images-app/15ab1b75-0f42-4f2a-84cc-4f1cdae920b8/", "convert_tiff": false,
-#           "project_name": "", "slyDatasetId": 48934, "slyProjectId": 12069, "remove_source": true,
-#           "normalize_exif": false, "slyDatasetName": "ds1", "slyProjectName": "Lemons (Test)",
-#           "remove_alpha_channel": false, "projectId": 12069}
-
-# state: {"convert_tiff": false, "project_name": "", "remove_source": true, "normalize_exif": false,
-#         "remove_alpha_channel": false, "files": "/import/import-images-app/8eb624e4-46a7-44bc-8660-987b6b62de91/",
-#         "slyDatasetId": 48934, "slyProjectId": 12069, "slyDatasetName": "ds1", "slyProjectName": "Lemons (Test)"}

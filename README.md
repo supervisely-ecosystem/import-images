@@ -25,9 +25,10 @@ This app allows you to upload only images without any annotations. By default, f
 If images you import has exif rotation, or they look rotated in labeling interfaces please enable "normalize exif" flag in the modal window.
 If your images have alpha channel, enable "remove alpha channel" flag. 
 Supervisely currently doesn't support `.tiff` image format, but if you want to import `.tiff` images, enable "convert .tiff to .jpeg" flag in the modal window. 
-Be aware that "remove files after successful import" flag is enabled by default, it will automatically remove source directory after import.
+Be aware that "remove files after successful import" flag is enabled by default, it will automatically remove source directory after import. 
+Images in `.nrrd` format can be viewed in Annotation Tool v2 only.
 
-Supported images formats: `.jpg`, `.jpeg`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`(enable flag)
+Supported images formats: `.jpg`, `.jpeg`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`(enable flag), `.nrrd`(Annotation Tool v2 only)'
 
 #### Input files structure
 

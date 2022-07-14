@@ -51,6 +51,8 @@ REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source")))
 
 DEFAULT_DATASET_NAME = "ds0"
 SUPPORTED_IMG_EXTS = SUPPORTED_IMG_EXTS
+SUPPORTED_IMG_EXTS.append(".nrrd")
+
 if CONVERT_TIFF:
     SUPPORTED_IMG_EXTS.append(".tiff")
 STORAGE_DIR = os.path.join(app_root_directory, "debug", "data", "storage_dir")
