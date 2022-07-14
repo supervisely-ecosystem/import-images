@@ -31,6 +31,7 @@ def import_images(api: sly.Api, task_id: int):
     if g.NEED_DOWNLOAD:
         f.download_project(api, g.INPUT_PATH)
 
+    dataset_info = None
     if g.DATASET_ID is not None:
         dataset_info = api.dataset.get_info_by_id(g.DATASET_ID)
         datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, dataset_info.name)

@@ -37,10 +37,9 @@ if os.environ.get('modal.state.slyProjectId') is not None:
 if os.environ.get('modal.state.slyDatasetId') is not None:
     DATASET_ID = int(os.environ.get('modal.state.slyDatasetId'))
 
-# INPUT_PATH = os.environ.get("modal.state.slyFolder", None)
 INPUT_PATH = os.environ.get("modal.state.files", None)
 if INPUT_PATH is None or INPUT_PATH == "":
-    INPUT_PATH = os.environ.get("context.slyFolder")
+    INPUT_PATH = os.environ.get("modal.state.slyFolder")
 
 OUTPUT_PROJECT_NAME = os.environ.get("modal.state.project_name", "")
 
