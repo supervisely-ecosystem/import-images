@@ -15,37 +15,48 @@ def import_images(api: sly.Api, task_id: int):
     if len(dir_info) == 0:
         raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
 
-    project_name = f.get_project_name_from_input_path(g.INPUT_PATH) if len(g.OUTPUT_PROJECT_NAME) == 0 else g.OUTPUT_PROJECT_NAME
+    if g.PROJECT_ID is None:
+        project_name = f.get_project_name_from_input_path(g.INPUT_PATH) if len(
+            g.OUTPUT_PROJECT_NAME) == 0 else g.OUTPUT_PROJECT_NAME
+        project = api.project.create(
+            workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
+        )
+    else:
+        project = api.project.get_info_by_id(g.PROJECT_ID)
 
     if g.NEED_DOWNLOAD:
         f.download_project(api, g.INPUT_PATH)
 
-    datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info)
+    dataset_info = None
+    if g.DATASET_ID is not None:
+        dataset_info = api.dataset.get_info_by_id(g.DATASET_ID)
+        datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, dataset_info.name)
+    else:
+        datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, None)
 
-    project = api.project.create(
-        workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
-    )
     for dataset_name in datasets_names:
-        dataset_info = api.dataset.create(
-            project_id=project.id, name=dataset_name, change_name_if_conflict=True
-        )
+        if g.DATASET_ID is None:
+            dataset_info = api.dataset.create(
+                project_id=project.id, name=dataset_name, change_name_if_conflict=True
+            )
 
         images_names = datasets_images_map[dataset_name]["img_names"]
         images_hashes = datasets_images_map[dataset_name]["img_hashes"]
         images_paths = datasets_images_map[dataset_name]["img_paths"]
+
         if g.NEED_DOWNLOAD:
             images_paths = [
                 os.path.join(g.STORAGE_DIR, image_path.lstrip("/"))
                 for image_path in images_paths
             ]
         for batch_names, batch_paths, batch_hashes in progress_bar(
-            zip(
-                sly.batched(seq=images_names, batch_size=10),
-                sly.batched(seq=images_paths, batch_size=10),
-                sly.batched(seq=images_hashes, batch_size=10),
-            ),
-            total=len(images_hashes) // 10,
-            message="Dataset: {!r}".format(dataset_name),
+                zip(
+                    sly.batched(seq=images_names, batch_size=10),
+                    sly.batched(seq=images_paths, batch_size=10),
+                    sly.batched(seq=images_hashes, batch_size=10),
+                ),
+                total=len(images_hashes),
+                message="Dataset: {!r}".format(dataset_name),
         ):
             if g.NEED_DOWNLOAD:
                 res_batch_names, res_batch_paths = f.normalize_exif_and_remove_alpha_channel(

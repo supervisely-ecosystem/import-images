@@ -28,7 +28,19 @@ api = sly.Api.from_env()
 TASK_ID = int(os.environ["TASK_ID"])
 TEAM_ID = int(os.environ["context.teamId"])
 WORKSPACE_ID = int(os.environ["context.workspaceId"])
-INPUT_PATH = os.environ.get("modal.state.slyFolder", None)
+
+PROJECT_ID = None
+DATASET_ID = None
+
+if os.environ.get('modal.state.slyProjectId') is not None:
+    PROJECT_ID = int(os.environ.get('modal.state.slyProjectId'))
+if os.environ.get('modal.state.slyDatasetId') is not None:
+    DATASET_ID = int(os.environ.get('modal.state.slyDatasetId'))
+
+INPUT_PATH = os.environ.get("modal.state.files", None)
+if INPUT_PATH is None or INPUT_PATH == "":
+    INPUT_PATH = os.environ.get("modal.state.slyFolder")
+
 OUTPUT_PROJECT_NAME = os.environ.get("modal.state.project_name", "")
 
 NORMALIZE_EXIF = bool(strtobool(os.getenv("modal.state.normalize_exif")))
@@ -39,7 +51,8 @@ REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source")))
 
 DEFAULT_DATASET_NAME = "ds0"
 SUPPORTED_IMG_EXTS = SUPPORTED_IMG_EXTS
-SUPPORTED_IMG_EXTS.remove(".nrrd")
+SUPPORTED_IMG_EXTS.append(".nrrd")
+
 if CONVERT_TIFF:
     SUPPORTED_IMG_EXTS.append(".tiff")
 STORAGE_DIR = os.path.join(app_root_directory, "debug", "data", "storage_dir")
