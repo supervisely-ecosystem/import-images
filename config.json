@@ -25,6 +25,7 @@
   "instance_version": "6.5.1",
   "headless": true,
   "context_menu": {
+    "context_category": "Import",
     "target": [
       "files_folder",
       "images_project",
