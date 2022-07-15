@@ -22,7 +22,7 @@
   "icon": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/icon.png",
   "icon_cover": true,
   "icon_background": "#FFFFFF",
-  "instance_version": "6.5.0",
+  "instance_version": "6.5.1",
   "headless": true,
   "context_menu": {
     "target": [
