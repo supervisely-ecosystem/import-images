@@ -122,18 +122,10 @@ def validate_mimetypes(images_names: list, images_paths: list) -> list:
             mimetype = file_info.mime
             file_ext = f".{file_info.ext}"
 
-
         if file_ext in mimetypes.guess_all_extensions(mimetype):
             continue
 
-        sly.logger.info(image_name)
-        sly.logger.info(mimetype)
-        sly.logger.info(file_ext)
-
-        file_ext = file_ext.lstrip('.')
-        if file_ext == "tif":
-            file_ext = "tiff"
-        new_img_ext = mimetypes.guess_extension(f"image/{file_ext}")
+        new_img_ext = mimetypes.guess_extension(mimetype)
         new_img_name = f"{get_file_name(image_name)}{new_img_ext}"
         images_names[idx] = new_img_name
         sly.logger.warn(
