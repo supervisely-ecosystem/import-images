@@ -105,7 +105,7 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
     """Dataset name from image path."""
     dir_path = os.path.split(file_path)[0]
     path_parts = pathlib.Path(dir_path).parts
-    return path_parts[1] if len(path_parts) != 1 else default
+    return path_parts[3] if len(path_parts) != 1 else default
 
 
 def validate_mimetypes(images_names: list, images_paths: list) -> list:
