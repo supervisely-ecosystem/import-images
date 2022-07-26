@@ -120,7 +120,7 @@ def validate_mimetypes(images_names: list, images_paths: list) -> list:
                 team_id=g.TEAM_ID, remote_path=image_path
             )
             mimetype = file_info.mime
-            file_ext = f".{file_info.ext}"
+            file_ext = get_file_ext(image_name).lower()
 
         if file_ext in mimetypes.guess_all_extensions(mimetype):
             continue
