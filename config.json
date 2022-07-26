@@ -21,7 +21,7 @@
   "icon": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/icon.png",
   "icon_cover": true,
   "icon_background": "#FFFFFF",
-  "instance_version": "6.5.1",
+  "instance_version": "6.5.9",
   "headless": true,
   "context_menu": {
     "context_category": "Import",
