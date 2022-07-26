@@ -14,7 +14,6 @@
     "files": "",
     "normalize_exif": false,
     "remove_alpha_channel": false,
-    "convert_tiff": false,
     "remove_source": true,
     "project_name": ""
   },
