@@ -1,9 +1,12 @@
+import mimetypes
 import os
 import pathlib
+
+import magic
 import supervisely as sly
-from PIL import Image
 from supervisely.io.fs import (get_file_ext, get_file_name,
                                get_file_name_with_ext)
+
 import globals as g
 
 
@@ -23,44 +26,9 @@ def download_project(api, input_path):
     return local_save_dir
 
 
-def convert_tiff_to_jpeg(name, path: str) -> tuple:
-    """Convert .tiff image format to .jpeg."""
-    name = f"{get_file_name(name)}.tiff.jpg"
-    img = Image.open(path)
-    path = f"{os.path.dirname(path)}/{name}"
-    img = img.convert("RGB")
-    img.save(path, "JPEG")
-    return name, path
-
-
-def process_tiff_images(
-        api: sly.Api, batch_names: list, batch_paths: list, batch_hashes: list
-) -> tuple:
-    """Detect and convert .tiff images in dataset if NEED_DOWNLOAD is False."""
-    tiff_names = []
-    tiff_paths = []
-    for image_name, image_path, images_hash in zip(
-            batch_names, batch_paths, batch_hashes
-    ):
-        if image_path.endswith(".tiff"):
-            local_save_path = f"{g.STORAGE_DIR}{image_path}"
-            api.file.download(
-                team_id=g.TEAM_ID,
-                remote_path=image_path,
-                local_save_path=local_save_path,
-            )
-            tiff_name, tiff_path = convert_tiff_to_jpeg(image_name, local_save_path)
-            tiff_names.append(tiff_name)
-            tiff_paths.append(tiff_path)
-            batch_names.remove(image_name)
-            batch_paths.remove(image_path)
-            batch_hashes.remove(images_hash)
-    return tiff_names, tiff_paths, batch_names, batch_hashes
-
-
 def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     """
-    If flags normalize exif, remove alpha channel or convert .tiff to .jpeg set to True,
+    If flags normalize exif, remove alpha channel set to True,
     download and process images with corresponding flags.
     """
     res_batch_names = []
@@ -68,9 +36,7 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     for name, path in zip(names, paths):
         try:
             file_ext = get_file_ext(path).lower()
-            if file_ext == ".tiff" and g.CONVERT_TIFF:
-                name, path = convert_tiff_to_jpeg(name, path)
-            elif file_ext != ".mpo" and (g.REMOVE_ALPHA_CHANNEL or g.NORMALIZE_EXIF):
+            if file_ext != ".mpo" and (g.REMOVE_ALPHA_CHANNEL or g.NORMALIZE_EXIF):
                 img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
                 sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
             res_batch_names.append(name)
@@ -135,10 +101,39 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
     return datasets_names, datasets_images_map
 
 
-def get_dataset_name(file_path, default="ds0"):
+def get_dataset_name(file_path: str, default: str = "ds0") -> str:
+    """Dataset name from image path."""
     dir_path = os.path.split(file_path)[0]
     ds_name = default
     path_parts = pathlib.Path(dir_path).parts
     if len(path_parts) != 1:
-        ds_name = path_parts[3]
+        if g.INPUT_PATH.startswith("/import/import-images/"):
+            ds_name = path_parts[3]
+        else:
+            ds_name = path_parts[-1]
     return ds_name
+
+
+def validate_mimetypes(images_names: list, images_paths: list) -> list:
+    """Validate mimetypes for images."""
+    mime = magic.Magic(mime=True)
+    for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
+        if g.NEED_DOWNLOAD:
+            mimetype = mime.from_file(image_path)
+        else:
+            file_info = g.api.file.get_info_by_path(
+                team_id=g.TEAM_ID, remote_path=image_path
+            )
+            mimetype = file_info.mime
+        file_ext = get_file_ext(image_name).lower()
+        if file_ext in mimetypes.guess_all_extensions(mimetype):
+            continue
+
+        new_img_ext = mimetypes.guess_extension(mimetype)
+        new_img_name = f"{get_file_name(image_name)}{new_img_ext}"
+        images_names[idx] = new_img_name
+        sly.logger.warn(
+            f"Image {image_name} extension doesn't have correct mimetype {mimetype}. Image has been converted to {new_img_ext}"
+        )
+
+    return images_names

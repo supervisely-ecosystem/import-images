@@ -1,12 +1,9 @@
 import os
 
 import supervisely as sly
-from supervisely.app.widgets import SlyTqdm
 
 import functions as f
 import globals as g
-
-progress_bar = SlyTqdm()
 
 
 @sly.timeit
@@ -16,8 +13,11 @@ def import_images(api: sly.Api, task_id: int):
         raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
 
     if g.PROJECT_ID is None:
-        project_name = f.get_project_name_from_input_path(g.INPUT_PATH) if len(
-            g.OUTPUT_PROJECT_NAME) == 0 else g.OUTPUT_PROJECT_NAME
+        project_name = (
+            f.get_project_name_from_input_path(g.INPUT_PATH)
+            if len(g.OUTPUT_PROJECT_NAME) == 0
+            else g.OUTPUT_PROJECT_NAME
+        )
         project = api.project.create(
             workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
         )
@@ -30,7 +30,9 @@ def import_images(api: sly.Api, task_id: int):
     dataset_info = None
     if g.DATASET_ID is not None:
         dataset_info = api.dataset.get_info_by_id(g.DATASET_ID)
-        datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, dataset_info.name)
+        datasets_names, datasets_images_map = f.get_datasets_images_map(
+            dir_info, dataset_info.name
+        )
     else:
         datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, None)
 
@@ -49,39 +51,31 @@ def import_images(api: sly.Api, task_id: int):
                 os.path.join(g.STORAGE_DIR, image_path.lstrip("/"))
                 for image_path in images_paths
             ]
-        for batch_names, batch_paths, batch_hashes in progress_bar(
-                zip(
-                    sly.batched(seq=images_names, batch_size=10),
-                    sly.batched(seq=images_paths, batch_size=10),
-                    sly.batched(seq=images_hashes, batch_size=10),
-                ),
-                total=len(images_hashes),
-                message="Dataset: {!r}".format(dataset_name),
+
+        progress = sly.Progress(
+            f"Uploading images to dataset {dataset_name}", total_cnt=len(images_names)
+        )
+        for batch_names, batch_paths, batch_hashes in zip(
+            sly.batched(seq=images_names, batch_size=10),
+            sly.batched(seq=images_paths, batch_size=10),
+            sly.batched(seq=images_hashes, batch_size=10),
         ):
             if g.NEED_DOWNLOAD:
                 res_batch_names, res_batch_paths = f.normalize_exif_and_remove_alpha_channel(
                     names=batch_names, paths=batch_paths
                 )
+
+                res_batch_names = f.validate_mimetypes(res_batch_names, res_batch_paths)
+
                 api.image.upload_paths(
                     dataset_id=dataset_info.id,
                     names=res_batch_names,
                     paths=res_batch_paths,
                 )
             else:
-                if g.CONVERT_TIFF:
-                    tiff_names, tiff_paths, batch_names, batch_hashes = f.process_tiff_images(
-                        api=api,
-                        batch_names=batch_names,
-                        batch_paths=batch_paths,
-                        batch_hashes=batch_hashes,
-                    )
-                    if len(tiff_names) > 0:
-                        api.image.upload_paths(
-                            dataset_id=dataset_info.id,
-                            names=tiff_names,
-                            paths=tiff_paths,
-                        )
                 try:
+
+                    batch_names = f.validate_mimetypes(batch_names, batch_paths)
                     api.image.upload_hashes(
                         dataset_id=dataset_info.id,
                         names=batch_names,
@@ -90,7 +84,9 @@ def import_images(api: sly.Api, task_id: int):
                 except Exception as e:
                     sly.logger.warn(msg=e)
 
-    if g.NEED_DOWNLOAD or g.CONVERT_TIFF:
+            progress.iters_done_report(len(batch_names))
+
+    if g.NEED_DOWNLOAD:
         sly.fs.remove_dir(dir_=g.STORAGE_DIR)
     if g.REMOVE_SOURCE:
         api.file.remove(team_id=g.TEAM_ID, path=g.INPUT_PATH)
