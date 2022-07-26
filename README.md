@@ -26,7 +26,9 @@ If your images have alpha channel, enable "remove alpha channel" flag.
 Be aware that "remove files after successful import" flag is enabled by default, it will automatically remove source directory after import. 
 Images in `.nrrd` format can be viewed in annotation tool v2 only.
 
-Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`, `.nrrd`(annotation tool v2 only)'
+Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`, `.nrrd`(annotation tool v2 only). 
+
+🔥 Starting from version `v1.2.0` application automatically compares image file extension with actual image mimetype and corrects extension if needed. For example: if you import image `my_image.png` but it is actually a TIFF then the image will be automatically renamed to `my_image.tiff`.
 
 #### Input files structure
 
