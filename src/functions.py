@@ -117,7 +117,7 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
         if g.INPUT_PATH.startswith("/import/import-images/"):
             ds_name = path_parts[3]
         else:
-            ds_name = path_parts[1]
+            ds_name = path_parts[-1]
     return ds_name
 
 
