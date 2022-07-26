@@ -101,13 +101,6 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
     return datasets_names, datasets_images_map
 
 
-# def get_dataset_name(file_path: str, default: str = "ds0") -> str:
-#     """Dataset name from image path."""
-#     dir_path = os.path.split(file_path)[0]
-#     path_parts = pathlib.Path(dir_path).parts
-#     return path_parts[3] if len(path_parts) != 1 else default
-
-
 def get_dataset_name(file_path: str, default: str = "ds0") -> str:
     """Dataset name from image path."""
     dir_path = os.path.split(file_path)[0]
@@ -127,14 +120,12 @@ def validate_mimetypes(images_names: list, images_paths: list) -> list:
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
         if g.NEED_DOWNLOAD:
             mimetype = mime.from_file(image_path)
-            file_ext = get_file_ext(image_name).lower()
         else:
             file_info = g.api.file.get_info_by_path(
                 team_id=g.TEAM_ID, remote_path=image_path
             )
             mimetype = file_info.mime
-            file_ext = get_file_ext(image_name).lower()
-
+        file_ext = get_file_ext(image_name).lower()
         if file_ext in mimetypes.guess_all_extensions(mimetype):
             continue
 
