@@ -25,6 +25,7 @@ def import_images(api: sly.Api, task_id: int):
         project = api.project.get_info_by_id(g.PROJECT_ID)
 
     if g.NEED_DOWNLOAD:
+        sly.logger.info(f"Data will be downloaded: {g.INPUT_PATH}")
         f.download_project(api, g.INPUT_PATH)
 
     dataset_info = None

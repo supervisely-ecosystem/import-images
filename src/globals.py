@@ -44,7 +44,8 @@ OUTPUT_PROJECT_NAME = os.environ.get("modal.state.project_name", "")
 
 NORMALIZE_EXIF = bool(strtobool(os.getenv("modal.state.normalize_exif")))
 REMOVE_ALPHA_CHANNEL = bool(strtobool(os.getenv("modal.state.remove_alpha_channel")))
-NEED_DOWNLOAD = NORMALIZE_EXIF or REMOVE_ALPHA_CHANNEL
+IS_ON_AGENT = api.file.is_on_agent(INPUT_PATH)
+NEED_DOWNLOAD = NORMALIZE_EXIF or REMOVE_ALPHA_CHANNEL or IS_ON_AGENT
 REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source")))
 
 DEFAULT_DATASET_NAME = "ds0"
