@@ -4,8 +4,7 @@ import pathlib
 
 import magic
 import supervisely as sly
-from supervisely.io.fs import (get_file_ext, get_file_name,
-                               get_file_name_with_ext)
+from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ext
 
 import globals as g
 
@@ -16,10 +15,15 @@ def get_project_name_from_input_path(input_path: str) -> str:
     return os.path.basename(full_path_dir)
 
 
-def download_project(api, input_path):
+def download_project(api: sly.Api, input_path):
     """Download target directory from Team Files if NEED_DOWNLOAD is True."""
     remote_proj_dir = input_path
-    local_save_dir = f"{g.STORAGE_DIR}{remote_proj_dir}/"
+    if api.file.is_on_agent(input_path):
+        agent_id, path_on_agent = api.file.parse_agent_id_and_path(input_path)
+        local_save_dir = f"{g.STORAGE_DIR}{path_on_agent}/"
+    else:
+        local_save_dir = f"{g.STORAGE_DIR}{remote_proj_dir}/"
+    local_save_dir = local_save_dir.replace("//", "/")
     api.file.download_directory(
         g.TEAM_ID, remote_path=remote_proj_dir, local_save_path=local_save_dir
     )
@@ -94,6 +98,8 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
             file_name = new_file_name
 
         datasets_images_map[ds_name]["img_names"].append(file_name)
+        if g.api.file.is_on_agent(full_path_file):
+            agent_id, full_path_file = g.api.file.parse_agent_id_and_path(full_path_file)
         datasets_images_map[ds_name]["img_paths"].append(full_path_file)
         datasets_images_map[ds_name]["img_hashes"].append(file_hash)
 
@@ -121,9 +127,7 @@ def validate_mimetypes(images_names: list, images_paths: list) -> list:
         if g.NEED_DOWNLOAD:
             mimetype = mime.from_file(image_path)
         else:
-            file_info = g.api.file.get_info_by_path(
-                team_id=g.TEAM_ID, remote_path=image_path
-            )
+            file_info = g.api.file.get_info_by_path(team_id=g.TEAM_ID, remote_path=image_path)
             mimetype = file_info.mime
         file_ext = get_file_ext(image_name).lower()
         if file_ext in mimetypes.guess_all_extensions(mimetype):

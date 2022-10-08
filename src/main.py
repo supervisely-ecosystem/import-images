@@ -1,6 +1,12 @@
 import os
-
+from dotenv import load_dotenv
 import supervisely as sly
+
+# for convenient debug, has no effect in production
+if sly.is_development():
+    load_dotenv("local.env")
+    load_dotenv(os.path.expanduser("~/supervisely.env"))
+    sly.fs.clean_dir(sly.app.get_data_dir())
 
 import functions as f
 import globals as g
@@ -31,9 +37,7 @@ def import_images(api: sly.Api, task_id: int):
     dataset_info = None
     if g.DATASET_ID is not None:
         dataset_info = api.dataset.get_info_by_id(g.DATASET_ID)
-        datasets_names, datasets_images_map = f.get_datasets_images_map(
-            dir_info, dataset_info.name
-        )
+        datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, dataset_info.name)
     else:
         datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, None)
 
@@ -49,8 +53,7 @@ def import_images(api: sly.Api, task_id: int):
 
         if g.NEED_DOWNLOAD:
             images_paths = [
-                os.path.join(g.STORAGE_DIR, image_path.lstrip("/"))
-                for image_path in images_paths
+                os.path.join(g.STORAGE_DIR, image_path.lstrip("/")) for image_path in images_paths
             ]
 
         progress = sly.Progress(
@@ -92,13 +95,9 @@ def import_images(api: sly.Api, task_id: int):
     if g.REMOVE_SOURCE:
         api.file.remove(team_id=g.TEAM_ID, path=g.INPUT_PATH)
         source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
-        sly.logger.info(
-            msg=f"Source directory: '{source_dir_name}' was successfully removed."
-        )
+        sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
 
-    api.task.set_output_project(
-        task_id=task_id, project_id=project.id, project_name=project.name
-    )
+    api.task.set_output_project(task_id=task_id, project_id=project.id, project_name=project.name)
 
 
 if __name__ == "__main__":
