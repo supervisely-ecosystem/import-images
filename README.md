@@ -30,7 +30,7 @@ Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo
 
 🔥 Starting from version `v1.2.0` application automatically compares image file extension with actual image mimetype and corrects extension if needed. For example: if you import image `my_image.png` but it is actually a TIFF then the image will be automatically renamed to `my_image.tiff`.
 
-🏋️ Starting from version `v1.2.4` application supports import from special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using drag-ang-drop mechanism:
+🏋️ Starting from version `v1.2.6` application supports import from special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using drag-ang-drop mechanism:
 
 1. Run agent on your computer where data is stored.
 2. Copy your data to special folder on your computer that was created by agent. Agent mounts this directory to your Supervisely instance and it becomes accessible in Team Files. Learn more [in documentation](https://github.com/supervisely/docs/blob/master/customization/agents/agent-storage/agent-storage.md).
