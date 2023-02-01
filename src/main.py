@@ -72,7 +72,9 @@ class MyImport(sly.app.Import):
                         names=batch_names, paths=batch_paths
                     )
 
-                    res_batch_names = f.validate_mimetypes(res_batch_names, res_batch_paths)
+                    res_batch_names = f.validate_mimetypes(
+                        res_batch_names, res_batch_paths, context.team_id
+                    )
 
                     g.api.image.upload_paths(
                         dataset_id=dataset_info.id,
