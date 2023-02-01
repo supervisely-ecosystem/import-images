@@ -32,7 +32,7 @@ class MyImport(sly.app.Import):
 
         if g.NEED_DOWNLOAD:
             sly.logger.info(f"Data will be downloaded: {g.INPUT_PATH}")
-            f.download_project(g.api, g.INPUT_PATH)
+            f.download_project(g.api, g.INPUT_PATH, context.team_id)
 
         dataset_info = None
         if context.dataset_id is not None:
