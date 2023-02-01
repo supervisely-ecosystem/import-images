@@ -103,7 +103,7 @@ class MyImport(sly.app.Import):
         if g.NEED_DOWNLOAD:
             sly.fs.remove_dir(dir_=g.STORAGE_DIR)
         if g.REMOVE_SOURCE and not g.IS_ON_AGENT:
-            g.api.file.remove(team_id=g.TEAM_ID, path=g.INPUT_PATH)
+            g.api.file.remove(team_id=context.team_id, path=g.INPUT_PATH)
             source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
             sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
 
