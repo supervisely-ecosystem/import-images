@@ -120,14 +120,14 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
     return ds_name
 
 
-def validate_mimetypes(images_names: list, images_paths: list) -> list:
+def validate_mimetypes(images_names: list, images_paths: list, team_id: int) -> list:
     """Validate mimetypes for images."""
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
         if g.NEED_DOWNLOAD:
             mimetype = mime.from_file(image_path)
         else:
-            file_info = g.api.file.get_info_by_path(team_id=g.TEAM_ID, remote_path=image_path)
+            file_info = g.api.file.get_info_by_path(team_id=team_id, remote_path=image_path)
             mimetype = file_info.mime
         file_ext = get_file_ext(image_name).lower()
         if file_ext in mimetypes.guess_all_extensions(mimetype):
