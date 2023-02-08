@@ -41,9 +41,7 @@ def get_files(directory):
         for file in files:
             path = join(root, file)
             try:
-                file_ext = get_file_ext(path)
-                if file_ext not in SUPPORTED_IMG_EXTS:
-                    sly.image.validate_ext(path)
+                sly.image.validate_ext(path)
                 validated_files.append(path)
             except Exception as e:
                 sly.logger.warn(
@@ -56,13 +54,12 @@ def get_files(directory):
 
 def get_ds_files_map(directory, default_ds_name="ds0"):
     ds_image_map = {}
-    for file in listdir(directory):
-        path = join(directory, file)
+    for f in listdir(directory):
+        path = join(directory, f)
         if isfile(path):
             try:
-                file_ext = get_file_ext(path)
-                if file_ext not in SUPPORTED_IMG_EXTS:
-                    sly.image.validate_ext(path)
+                sly.image.validate_ext(path)
+                print("Path validated: ", path)
                 ds_image_map[default_ds_name].append(path)
             except Exception as e:
                 sly.logger.warn(
@@ -73,6 +70,7 @@ def get_ds_files_map(directory, default_ds_name="ds0"):
             ds_name = basename(path)
             ds_files = get_files(path)
             ds_image_map[ds_name] = ds_files
+    print(ds_image_map[default_ds_name])
 
     return ds_image_map
 

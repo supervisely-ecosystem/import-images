@@ -74,8 +74,8 @@ class MyImport(sly.app.Import):
                 try:
                     api.image.upload_paths(
                         dataset_id=dataset_info.id,
-                        name=res_batch_names,
-                        path=res_batch_paths,
+                        names=res_batch_names,
+                        paths=res_batch_paths,
                     )
                 except Exception as ex:
                     sly.logger.warn(ex)
