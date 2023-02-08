@@ -1,6 +1,7 @@
 {
   "name": "Import Images",
   "type": "app",
+  "version": "2.0.0",
   "categories": ["import", "images", "essentials"],
   "description": "Drag and drop images to Supervisely, supported formats: .jpg, .jpeg, jpe, .mpo, .bmp, .png, .tiff, .tif, .webp, .nrrd",
   "docker_image": "supervisely/base-py-sdk:6.69.19",
@@ -19,7 +20,7 @@
   },
   "task_location": "workspace_tasks",
   "min_agent_version": "6.7.4",
-  "min_instance_version": "6.5.46",
+  "min_instance_version": "6.7.13",
   "headless": true,
   "context_menu": {
     "context_category": "Import",
