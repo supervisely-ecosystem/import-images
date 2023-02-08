@@ -54,13 +54,13 @@ def get_files(directory):
 
 def get_ds_files_map(directory, default_ds_name="ds0"):
     ds_image_map = {}
+    files_list = []
     for f in listdir(directory):
         path = join(directory, f)
         if isfile(path):
             try:
                 sly.image.validate_ext(path)
-                print("Path validated: ", path)
-                ds_image_map[default_ds_name].append(path)
+                files_list.append(path)
             except Exception as e:
                 sly.logger.warn(
                     "File skipped {!r}: error occurred during processing {!r}".format(path, str(e))
@@ -70,7 +70,7 @@ def get_ds_files_map(directory, default_ds_name="ds0"):
             ds_name = basename(path)
             ds_files = get_files(path)
             ds_image_map[ds_name] = ds_files
-    print(ds_image_map[default_ds_name])
+    ds_image_map[default_ds_name] = files_list
 
     return ds_image_map
 
