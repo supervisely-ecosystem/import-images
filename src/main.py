@@ -80,8 +80,7 @@ class MyImport(sly.app.Import):
                 except Exception as ex:
                     sly.logger.warn(ex)
 
-        if REMOVE_SOURCE:
-            remove_dir(context.path)
+        remove_dir(context.path)
         return context.project_id
 
 
