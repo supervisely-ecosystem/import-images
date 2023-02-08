@@ -31,7 +31,7 @@ class MyImport(sly.app.Import):
         api = sly.Api.from_env()
 
         if context.project_id is None:
-            project_name = basename(context.path)
+            project_name = PROJECT_NAME or basename(context.path)
             project = api.project.create(
                 workspace_id=context.workspace_id,
                 name=project_name,
@@ -39,7 +39,7 @@ class MyImport(sly.app.Import):
             )
         else:
             project = api.project.get_info_by_id(context.project_id)
-            project_name = PROJECT_NAME or project.name
+            project_name = project.name
 
         ds_files_map = f.get_ds_files_map(context.path, DEFAULT_DATASET_NAME)
         for ds_name in ds_files_map:
