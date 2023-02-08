@@ -68,9 +68,7 @@ class MyImport(sly.app.Import):
                     res_batch_names, res_batch_paths = f.normalize_exif_and_remove_alpha_channel(
                         names=batch_names, paths=batch_paths
                     )
-                res_batch_names = f.validate_mimetypes(
-                    api, batch_names, batch_paths, context.team_id
-                )
+                res_batch_names = f.validate_mimetypes(batch_names, batch_paths)
                 try:
                     api.image.upload_paths(
                         dataset_id=dataset_info.id,
@@ -80,7 +78,8 @@ class MyImport(sly.app.Import):
                 except Exception as ex:
                     sly.logger.warn(ex)
 
-        remove_dir(context.path)
+        if REMOVE_SOURCE:
+            remove_dir(context.path)
         return context.project_id
 
 
