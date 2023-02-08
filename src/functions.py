@@ -34,7 +34,7 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     return res_batch_names, res_batch_paths
 
 
-def get_files(directory):
+def get_files(directory) -> list:
     dir_files = []
     for root, _, files in walk(directory):
         validated_files = []
@@ -52,9 +52,13 @@ def get_files(directory):
     return dir_files
 
 
-def get_ds_files_map(directory, default_ds_name="ds0"):
+def get_ds_files_map(directory, default_ds_name="ds0") -> dict:
     ds_image_map = {}
     files_list = []
+    dirs_list = []
+    if not isdir(directory):
+        sly.logger.warn(f"Error occurred during processing {directory}. {str(e)}")
+        return ds_image_map
     for f in listdir(directory):
         path = join(directory, f)
         if isfile(path):
@@ -67,15 +71,18 @@ def get_ds_files_map(directory, default_ds_name="ds0"):
                 )
                 continue
         elif isdir(path):
-            ds_name = basename(path)
-            ds_files = get_files(path)
-            ds_image_map[ds_name] = ds_files
+            dirs_list.append(path)
+
     ds_image_map[default_ds_name] = files_list
+    for path in dirs_list:
+        ds_name = basename(path)
+        ds_files = get_files(path)
+        ds_image_map[ds_name] = ds_files
 
     return ds_image_map
 
 
-def validate_mimetypes(api, images_names: list, images_paths: list, team_id: int) -> list:
+def validate_mimetypes(images_names: list, images_paths: list) -> list:
     """Validate mimetypes for images."""
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
