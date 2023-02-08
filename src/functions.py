@@ -1,33 +1,15 @@
 import mimetypes
-import os
-import pathlib
+from os import listdir, walk
+from os.path import basename, isdir, isfile, join
 
 import magic
+
 import supervisely as sly
-from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ext
+from supervisely.imaging.image import SUPPORTED_IMG_EXTS
+from supervisely.io.fs import get_file_ext, get_file_name
 
-import globals as g
-
-
-def get_project_name_from_input_path(input_path: str) -> str:
-    """Returns project name from target sly folder name."""
-    full_path_dir = os.path.dirname(input_path)
-    return os.path.basename(full_path_dir)
-
-
-def download_project(api: sly.Api, input_path: str, team_id: int):
-    """Download target directory from Team Files if NEED_DOWNLOAD is True."""
-    remote_proj_dir = input_path
-    if api.file.is_on_agent(input_path):
-        agent_id, path_on_agent = api.file.parse_agent_id_and_path(input_path)
-        local_save_dir = f"{g.STORAGE_DIR}{path_on_agent}/"
-    else:
-        local_save_dir = f"{g.STORAGE_DIR}{remote_proj_dir}/"
-    local_save_dir = local_save_dir.replace("//", "/")
-    api.file.download_directory(
-        team_id, remote_path=remote_proj_dir, local_save_path=local_save_dir
-    )
-    return local_save_dir
+SUPPORTED_IMG_EXTS = SUPPORTED_IMG_EXTS
+SUPPORTED_IMG_EXTS.append(".nrrd")
 
 
 def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
@@ -40,9 +22,9 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     for name, path in zip(names, paths):
         try:
             file_ext = get_file_ext(path).lower()
-            if file_ext != ".mpo" and (g.REMOVE_ALPHA_CHANNEL or g.NORMALIZE_EXIF):
-                img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
-                sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
+            if file_ext != ".mpo":
+                img = sly.image.read(path, remove_alpha_channel=True)
+                sly.image.write(path, img, remove_alpha_channel=True)
             res_batch_names.append(name)
             res_batch_paths.append(path)
         except Exception as e:
@@ -52,83 +34,54 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     return res_batch_names, res_batch_paths
 
 
-def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
-    """Creates a dictionary map based on api response from the target sly folder data."""
-    datasets_images_map = {}
-    for file_info in dir_info:
-        full_path_file = file_info["path"]
-        try:
-            file_ext = get_file_ext(full_path_file)
-            if file_ext not in g.SUPPORTED_IMG_EXTS:
-                sly.image.validate_ext(full_path_file)
-        except Exception as e:
-            sly.logger.warn(
-                "File skipped {!r}: error occurred during processing {!r}".format(
-                    full_path_file, str(e)
-                )
-            )
-            continue
-
-        file_name = get_file_name_with_ext(full_path_file)
-        file_hash = file_info["hash"]
-        if dataset_name is not None:
-            ds_name = dataset_name
-        else:
+def get_files(directory):
+    dir_files = []
+    for root, _, files in walk(directory):
+        validated_files = []
+        for file in files:
+            path = join(root, file)
             try:
-                ds_name = get_dataset_name(full_path_file.lstrip("/"))
-            except:
-                ds_name = g.DEFAULT_DATASET_NAME
-
-        if ds_name not in datasets_images_map.keys():
-            datasets_images_map[ds_name] = {
-                "img_names": [],
-                "img_paths": [],
-                "img_hashes": [],
-            }
-
-        if file_name in datasets_images_map[ds_name]["img_names"]:
-            temp_name = sly.fs.get_file_name(full_path_file)
-            temp_ext = sly.fs.get_file_ext(full_path_file)
-            new_file_name = f"{temp_name}_{sly.rand_str(5)}{temp_ext}"
-            sly.logger.warning(
-                "Name {!r} already exists in dataset {!r}: renamed to {!r}".format(
-                    file_name, ds_name, new_file_name
+                file_ext = get_file_ext(path)
+                if file_ext not in SUPPORTED_IMG_EXTS:
+                    sly.image.validate_ext(path)
+                validated_files.append(path)
+            except Exception as e:
+                sly.logger.warn(
+                    "File skipped {!r}: error occurred during processing {!r}".format(path, str(e))
                 )
-            )
-            file_name = new_file_name
-
-        datasets_images_map[ds_name]["img_names"].append(file_name)
-        if g.api.file.is_on_agent(full_path_file):
-            agent_id, full_path_file = g.api.file.parse_agent_id_and_path(full_path_file)
-        datasets_images_map[ds_name]["img_paths"].append(full_path_file)
-        datasets_images_map[ds_name]["img_hashes"].append(file_hash)
-
-    datasets_names = list(datasets_images_map.keys())
-    return datasets_names, datasets_images_map
+                continue
+        dir_files.extend(validated_files)
+    return dir_files
 
 
-def get_dataset_name(file_path: str, default: str = "ds0") -> str:
-    """Dataset name from image path."""
-    dir_path = os.path.split(file_path)[0]
-    ds_name = default
-    path_parts = pathlib.Path(dir_path).parts
-    if len(path_parts) != 1:
-        if g.INPUT_PATH.startswith("/import/import-images/"):
-            ds_name = path_parts[3]
-        else:
-            ds_name = path_parts[-1]
-    return ds_name
+def get_ds_files_map(directory, default_ds_name="ds0"):
+    ds_image_map = {}
+    for file in listdir(directory):
+        path = join(directory, file)
+        if isfile(path):
+            try:
+                file_ext = get_file_ext(path)
+                if file_ext not in SUPPORTED_IMG_EXTS:
+                    sly.image.validate_ext(path)
+                ds_image_map[default_ds_name].append(path)
+            except Exception as e:
+                sly.logger.warn(
+                    "File skipped {!r}: error occurred during processing {!r}".format(path, str(e))
+                )
+                continue
+        elif isdir(path):
+            ds_name = basename(path)
+            ds_files = get_files(path)
+            ds_image_map[ds_name] = ds_files
+
+    return ds_image_map
 
 
-def validate_mimetypes(images_names: list, images_paths: list, team_id: int) -> list:
+def validate_mimetypes(api, images_names: list, images_paths: list, team_id: int) -> list:
     """Validate mimetypes for images."""
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
-        if g.NEED_DOWNLOAD:
-            mimetype = mime.from_file(image_path)
-        else:
-            file_info = g.api.file.get_info_by_path(team_id=team_id, remote_path=image_path)
-            mimetype = file_info.mime
+        mimetype = mime.from_file(image_path)
         file_ext = get_file_ext(image_name).lower()
         if file_ext in mimetypes.guess_all_extensions(mimetype):
             continue
