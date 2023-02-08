@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 import supervisely as sly
 from supervisely.app.widgets import SlyTqdm
-from supervisely.io.fs import get_file_name_with_ext, remove_dir
+from supervisely.io.fs import get_file_name_with_ext
 
 # for convenient debug, has no effect in production
 if sly.is_development():
@@ -22,8 +22,6 @@ DEFAULT_DATASET_NAME = "ds0"
 PROJECT_NAME = environ.get("modal.state.projectName", None)
 NORMALIZE_EXIF = bool(strtobool(os.getenv("modal.state.normalizeExif", "False")))
 REMOVE_ALPHA_CHANNEL = bool(strtobool(os.getenv("modal.state.removeAlphaChannel", "False")))
-NEED_DOWNLOAD = NORMALIZE_EXIF or REMOVE_ALPHA_CHANNEL
-REMOVE_SOURCE = bool(strtobool(getenv("modal.state.removeSource")))
 
 
 class MyImport(sly.app.Import):
@@ -78,8 +76,6 @@ class MyImport(sly.app.Import):
                 except Exception as ex:
                     sly.logger.warn(ex)
 
-        if REMOVE_SOURCE:
-            remove_dir(context.path)
         return context.project_id
 
 
