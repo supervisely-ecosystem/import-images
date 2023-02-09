@@ -30,7 +30,7 @@
           <el-tab-pane label="Team files" @tab-click="state.isDragMode = false">
             <sly-select-team-files
               :team-id="context.teamId"
-              :options="{maxHeight: '250px'; selectionFileType: 'folder'}"
+              :options="{maxHeight: '250px', selectionFileType: 'folder'}"
               @items-selected="(files) => { 
                 if (files && files.length) { 
                   let setName = 'slyFolder';
