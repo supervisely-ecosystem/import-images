@@ -57,7 +57,7 @@ def get_ds_files_map(directory, default_ds_name="ds0") -> dict:
     files_list = []
     dirs_list = []
     if not isdir(directory):
-        sly.logger.warn(f"Error occurred during processing {directory}. {str(e)}")
+        sly.logger.warn(f"Path {directory} is not directory.")
         return ds_image_map
     for f in listdir(directory):
         path = join(directory, f)
