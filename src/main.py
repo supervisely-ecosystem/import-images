@@ -76,7 +76,7 @@ class MyImport(sly.app.Import):
                 except Exception as ex:
                     sly.logger.warn(ex)
 
-        return context.project_id
+        return project.id
 
 
 app = MyImport()
