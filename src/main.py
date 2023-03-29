@@ -3,35 +3,137 @@ from dotenv import load_dotenv
 import supervisely as sly
 
 # for convenient debug, has no effect in production
-if sly.is_development():
-    load_dotenv("local.env")
-    load_dotenv(os.path.expanduser("~/supervisely.env"))
-    sly.fs.clean_dir(sly.app.get_data_dir())
+# if sly.is_development():
+load_dotenv("local.env")
+load_dotenv(os.path.expanduser("~/supervisely.env"))
+sly.fs.clean_dir(sly.app.get_data_dir())
 
 # import functions as f
 # import globals as g
 import src.globals as g
 import src.functions as f
 
+from supervisely.project.project_type import ProjectType
 
-from supervisely.app.widgets import Container, Card, Input
 
-card = Card(
-    "1️⃣ Input project",
-    "Select videos in current project",
-    collapsable=True,
-    content=Input(),
+from supervisely.app.widgets import (
+    Container,
+    Card,
+    Input,
+    Select,
+    Checkbox,
+    Text,
+    FileStorageUpload,
+    RadioGroup,
+    OneOf,
+    SelectProject,
+    SelectDataset,
+    Button,
 )
 
+# FOLDER ===========================================================================================
+file_upload = Text(text="FileStorageUpload here")
+team_files = Text(text="Team Files here")
+items = [
+    RadioGroup.Item(value="Drag & drop", content=file_upload),
+    RadioGroup.Item(value="Team files", content=team_files),
+]
+radio_group = RadioGroup(items=items)
+one_of = OneOf(radio_group)
+widgets = Container(widgets=[radio_group, one_of])
+card_upload_or_tf = Card(content=widgets)
+
+input_project_name = Input(placeholder="Enter Project Name")
+card_project_name = Card(
+    title="Result Project Name",
+    description="Enter project name manually (optional) or keep empty to generate it automatically",
+    content=input_project_name,
+)
+
+folder = Container(widgets=[card_upload_or_tf, card_project_name])
+select_project = SelectProject(allowed_types=[ProjectType.IMAGES], compact=True)
+select_dataset = SelectDataset()
+
+selector_items = [
+    Select.Item(value="Folder", label="Folder", content=folder),
+    Select.Item(value="Images project", label="Images project", content=select_project),
+    Select.Item(value="Images dataset", label="Images dataset", content=select_dataset),
+]
+
+
+select = Select(items=selector_items)
+one_of = OneOf(conditional_widget=select)
+card1 = Card(
+    title="One of",
+    content=Container(widgets=[select, one_of]),
+)
+
+
+# ====================================================================================================================
+exif = Checkbox(content="Normalize exif")
+exif_text = Text(
+    text="If images you import has exif rotation or they look rotated in labeling interfaces please enable normalize exif",
+    status="info",
+)
+
+exif_data = Container(
+    widgets=[exif, exif_text],
+    direction="vertical",
+)
+
+card_exif = Card(
+    content=exif_data,
+)
+
+alpha_channel = Checkbox(content="Remove alpha channel")
+alpha_channel_text = Text(
+    text="If your images have alpha channel, enable remove alpha channel",
+    status="info",
+)
+
+alpha_channel_data = Container(
+    widgets=[alpha_channel, alpha_channel_text],
+    direction="vertical",
+)
+
+card_alpha_channel = Card(
+    content=alpha_channel_data,
+)
+
+temporary_files = Checkbox(content="Remove temporary files after successful import", checked=True)
+temporary_files_text = Text(
+    text="Removes source directory from Team Files after successful import",
+    status="info",
+)
+
+temporary_files_data = Container(
+    widgets=[
+        temporary_files,
+        temporary_files_text,
+    ],
+    direction="vertical",
+)
+
+card_temporary_files = Card(
+    content=temporary_files_data,
+)
+# ===================================================================================================
+run_button = Button(text="Run")
+
+# ===================================================================================================
 layout = Container(
-    widgets=[card],
+    widgets=[card1, card_exif, card_alpha_channel, card_temporary_files, run_button],
     direction="vertical",
     gap=15,
 )
 
 app = sly.Application(layout=layout)
 
-
+# =========================================================================================================
+# =========================================================================================================
+# =========================================================================================================
+# =========================================================================================================
+# =========================================================================================================
 class MyImport(sly.app.Import):
     def is_path_required(self) -> bool:
         return False
