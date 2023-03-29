@@ -15,7 +15,7 @@ def get_project_name_from_input_path(input_path: str) -> str:
     return os.path.basename(full_path_dir)
 
 
-def download_project(api: sly.Api, input_path):
+def download_project(api: sly.Api, input_path: str, team_id: int):
     """Download target directory from Team Files if NEED_DOWNLOAD is True."""
     remote_proj_dir = input_path
     if api.file.is_on_agent(input_path):
@@ -25,7 +25,7 @@ def download_project(api: sly.Api, input_path):
         local_save_dir = f"{g.STORAGE_DIR}{remote_proj_dir}/"
     local_save_dir = local_save_dir.replace("//", "/")
     api.file.download_directory(
-        g.TEAM_ID, remote_path=remote_proj_dir, local_save_path=local_save_dir
+        team_id, remote_path=remote_proj_dir, local_save_path=local_save_dir
     )
     return local_save_dir
 
@@ -120,14 +120,14 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
     return ds_name
 
 
-def validate_mimetypes(images_names: list, images_paths: list) -> list:
+def validate_mimetypes(images_names: list, images_paths: list, team_id: int) -> list:
     """Validate mimetypes for images."""
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
         if g.NEED_DOWNLOAD:
             mimetype = mime.from_file(image_path)
         else:
-            file_info = g.api.file.get_info_by_path(team_id=g.TEAM_ID, remote_path=image_path)
+            file_info = g.api.file.get_info_by_path(team_id=team_id, remote_path=image_path)
             mimetype = file_info.mime
         file_ext = get_file_ext(image_name).lower()
         if file_ext in mimetypes.guess_all_extensions(mimetype):
