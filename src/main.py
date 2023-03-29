@@ -12,6 +12,24 @@ import functions as f
 import globals as g
 
 
+from supervisely.app.widgets import Container, Card, Input
+
+card = Card(
+    "1️⃣ Input project",
+    "Select videos in current project",
+    collapsable=True,
+    content=Input(),
+)
+
+layout = Container(
+    widgets=[card],
+    direction="vertical",
+    gap=15,
+)
+
+app = sly.Application(layout=layout)
+
+
 class MyImport(sly.app.Import):
     def is_path_required(self) -> bool:
         return False
