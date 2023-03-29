@@ -8,8 +8,10 @@ if sly.is_development():
     load_dotenv(os.path.expanduser("~/supervisely.env"))
     sly.fs.clean_dir(sly.app.get_data_dir())
 
-import functions as f
-import globals as g
+# import functions as f
+# import globals as g
+import src.globals as g
+import src.functions as f
 
 
 from supervisely.app.widgets import Container, Card, Input
@@ -126,5 +128,5 @@ class MyImport(sly.app.Import):
             sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
 
 
-app = MyImport()
-app.run()
+# app = MyImport()
+# app.run()
