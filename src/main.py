@@ -12,106 +12,101 @@ import functions as f
 import globals as g
 
 
-@sly.timeit
-def import_images(api: sly.Api, task_id: int):
-    dir_info = api.file.list(g.TEAM_ID, g.INPUT_PATH)
-    if len(dir_info) == 0:
-        raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
+class MyImport(sly.app.Import):
+    def is_path_required(self) -> bool:
+        return False
 
-    if g.PROJECT_ID is None:
-        project_name = (
-            f.get_project_name_from_input_path(g.INPUT_PATH)
-            if len(g.OUTPUT_PROJECT_NAME) == 0
-            else g.OUTPUT_PROJECT_NAME
-        )
-        project = api.project.create(
-            workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
-        )
-    else:
-        project = api.project.get_info_by_id(g.PROJECT_ID)
+    def process(self, context: sly.app.Import.Context):
+        dir_info = g.api.file.list(context.team_id, g.INPUT_PATH)
+        if len(dir_info) == 0:
+            raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
 
-    if g.NEED_DOWNLOAD:
-        sly.logger.info(f"Data will be downloaded: {g.INPUT_PATH}")
-        f.download_project(api, g.INPUT_PATH)
-
-    dataset_info = None
-    if g.DATASET_ID is not None:
-        dataset_info = api.dataset.get_info_by_id(g.DATASET_ID)
-        datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, dataset_info.name)
-    else:
-        datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, None)
-
-    for dataset_name in datasets_names:
-        if g.DATASET_ID is None:
-            dataset_info = api.dataset.create(
-                project_id=project.id, name=dataset_name, change_name_if_conflict=True
+        if context.project_id is None:
+            project_name = (
+                f.get_project_name_from_input_path(g.INPUT_PATH)
+                if len(g.OUTPUT_PROJECT_NAME) == 0
+                else g.OUTPUT_PROJECT_NAME
             )
-
-        images_names = datasets_images_map[dataset_name]["img_names"]
-        images_hashes = datasets_images_map[dataset_name]["img_hashes"]
-        images_paths = datasets_images_map[dataset_name]["img_paths"]
+            project = g.api.project.create(
+                workspace_id=context.workspace_id, name=project_name, change_name_if_conflict=True
+            )
+        else:
+            project = g.api.project.get_info_by_id(context.project_id)
 
         if g.NEED_DOWNLOAD:
-            images_paths = [
-                os.path.join(g.STORAGE_DIR, image_path.lstrip("/")) for image_path in images_paths
-            ]
+            sly.logger.info(f"Data will be downloaded: {g.INPUT_PATH}")
+            f.download_project(g.api, g.INPUT_PATH, context.team_id)
 
-        progress = sly.Progress(
-            f"Uploading images to dataset {dataset_name}", total_cnt=len(images_names)
-        )
-        for batch_names, batch_paths, batch_hashes in zip(
-            sly.batched(seq=images_names, batch_size=10),
-            sly.batched(seq=images_paths, batch_size=10),
-            sly.batched(seq=images_hashes, batch_size=10),
-        ):
+        dataset_info = None
+        if context.dataset_id is not None:
+            dataset_info = g.api.dataset.get_info_by_id(context.dataset_id)
+            datasets_names, datasets_images_map = f.get_datasets_images_map(
+                dir_info, dataset_info.name
+            )
+        else:
+            datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, None)
+
+        for dataset_name in datasets_names:
+            if context.dataset_id is None:
+                dataset_info = g.api.dataset.create(
+                    project_id=project.id, name=dataset_name, change_name_if_conflict=True
+                )
+
+            images_names = datasets_images_map[dataset_name]["img_names"]
+            images_hashes = datasets_images_map[dataset_name]["img_hashes"]
+            images_paths = datasets_images_map[dataset_name]["img_paths"]
+
             if g.NEED_DOWNLOAD:
-                res_batch_names, res_batch_paths = f.normalize_exif_and_remove_alpha_channel(
-                    names=batch_names, paths=batch_paths
-                )
+                images_paths = [
+                    os.path.join(g.STORAGE_DIR, image_path.lstrip("/"))
+                    for image_path in images_paths
+                ]
 
-                res_batch_names = f.validate_mimetypes(res_batch_names, res_batch_paths)
-
-                api.image.upload_paths(
-                    dataset_id=dataset_info.id,
-                    names=res_batch_names,
-                    paths=res_batch_paths,
-                )
-            else:
-                try:
-
-                    batch_names = f.validate_mimetypes(batch_names, batch_paths)
-                    api.image.upload_hashes(
-                        dataset_id=dataset_info.id,
-                        names=batch_names,
-                        hashes=batch_hashes,
+            progress = sly.Progress(
+                f"Uploading images to dataset {dataset_name}", total_cnt=len(images_names)
+            )
+            for batch_names, batch_paths, batch_hashes in zip(
+                sly.batched(seq=images_names, batch_size=10),
+                sly.batched(seq=images_paths, batch_size=10),
+                sly.batched(seq=images_hashes, batch_size=10),
+            ):
+                if g.NEED_DOWNLOAD:
+                    res_batch_names, res_batch_paths = f.normalize_exif_and_remove_alpha_channel(
+                        names=batch_names, paths=batch_paths
                     )
-                except Exception as e:
-                    sly.logger.warn(msg=e)
 
-            progress.iters_done_report(len(batch_names))
+                    res_batch_names = f.validate_mimetypes(
+                        res_batch_names, res_batch_paths, context.team_id
+                    )
 
-    if g.NEED_DOWNLOAD:
-        sly.fs.remove_dir(dir_=g.STORAGE_DIR)
-    if g.REMOVE_SOURCE and not g.IS_ON_AGENT:
-        api.file.remove(team_id=g.TEAM_ID, path=g.INPUT_PATH)
-        source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
-        sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
+                    g.api.image.upload_paths(
+                        dataset_id=dataset_info.id,
+                        names=res_batch_names,
+                        paths=res_batch_paths,
+                    )
+                else:
+                    try:
 
-    api.task.set_output_project(task_id=task_id, project_id=project.id, project_name=project.name)
+                        batch_names = f.validate_mimetypes(
+                            batch_names, batch_paths, context.team_id
+                        )
+                        g.api.image.upload_hashes(
+                            dataset_id=dataset_info.id,
+                            names=batch_names,
+                            hashes=batch_hashes,
+                        )
+                    except Exception as e:
+                        sly.logger.warn(msg=e)
+
+                progress.iters_done_report(len(batch_names))
+
+        if g.NEED_DOWNLOAD:
+            sly.fs.remove_dir(dir_=g.STORAGE_DIR)
+        if g.REMOVE_SOURCE and not g.IS_ON_AGENT:
+            g.api.file.remove(team_id=context.team_id, path=g.INPUT_PATH)
+            source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
+            sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
 
 
-if __name__ == "__main__":
-    sly.logger.info(
-        "Script arguments",
-        extra={
-            "context.teamId": g.TEAM_ID,
-            "context.workspaceId": g.WORKSPACE_ID,
-            "modal.state.slyFolder": g.INPUT_PATH,
-        },
-    )
-
-    import_images(g.api, g.TASK_ID)
-    try:
-        sly.app.fastapi.shutdown()
-    except KeyboardInterrupt:
-        sly.logger.info("Application shutdown successfully")
+app = MyImport()
+app.run()
