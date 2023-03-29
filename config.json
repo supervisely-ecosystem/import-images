@@ -8,7 +8,6 @@
   "icon_background": "#FFFFFF",
   "min_agent_version": "6.7.4",
   "min_instance_version": "6.5.46",
-  "headless": true,
   "context_menu": {
     "context_category": "Import",
     "target": [
