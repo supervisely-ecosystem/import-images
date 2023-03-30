@@ -25,27 +25,35 @@ from supervisely.app.widgets import (
     OneOf,
     Button,
     DestinationProject,
+    RadioTabs,
+    TeamFilesSelector,
 )
 
 team_id = int(os.environ["context.teamId"])
 file_upload = FileStorageUpload(team_id=team_id, path=g.INPUT_PATH, change_name_if_conflict=True)
-team_files = Text(text="Team Files here")  # TODO check it
-items = [
-    RadioGroup.Item(value="Drag & drop", content=file_upload),
-    RadioGroup.Item(value="Team files", content=team_files),
-]
-radio_group = RadioGroup(items=items)
-one_of = OneOf(radio_group)
-widgets = Container(widgets=[radio_group, one_of])
+# team_files = Text(text="Team Files here")  # TODO check it
+team_files = TeamFilesSelector(team_id=team_id)
+# items = [
+#     RadioGroup.Item(value="Drag & drop", content=file_upload),
+#     RadioGroup.Item(value="Team files", content=team_files),
+# ]
+# radio_group = RadioGroup(items=items)
+# one_of = OneOf(radio_group)
+# widgets = Container(widgets=[radio_group, one_of])
+# card_upload_or_tf = Card(content=widgets)
+
+drag_drop = "Drag & drop"
+team_files = "Team files"
+titles = [drag_drop, team_files]
+contents = [file_upload, team_files]
+radio_tabs = RadioTabs(titles=titles, contents=contents)
+widgets = Container(widgets=[radio_tabs])
 card_upload_or_tf = Card(content=widgets)
 
 input_card = Card(
     title="Input Menu",
     content=Container(widgets=[card_upload_or_tf]),
 )
-
-
-# ====================================================================================================================
 
 exif_main_text = Text(text="Normalize exif")
 exif_add_text = Text(
@@ -94,10 +102,8 @@ destination_card = Card(
     content=destination_project,
 )
 
-# ===================================================================================================
 run_button = Button(text="Run")
 
-# ===================================================================================================
 layout = Container(
     widgets=[input_card, checkboxes, destination_card, run_button],
     direction="vertical",
@@ -112,10 +118,15 @@ class MyImport(sly.app.Import):
         return False
 
     def process(self, context: sly.app.Import.Context):
-        try:
-            g.INPUT_PATH = file_upload.path
-        except TypeError:
-            raise TypeError("Grag & drop folders/files for uploading")
+        current_tab = radio_tabs.get_active_tab()
+        if current_tab == drag_drop:
+            try:
+                g.INPUT_PATH = file_upload.path
+
+            except TypeError:
+                raise TypeError("Grag & drop folders/files for uploading")
+        else:
+            g.INPUT_PATH = team_files.get_selected_paths[0]
 
         project_name = destination_project.get_project_name()
         project_id = destination_project.get_selected_project_id()
