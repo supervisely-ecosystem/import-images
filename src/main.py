@@ -32,8 +32,7 @@ from supervisely.app.widgets import (
 
 # FOLDER ===========================================================================================
 team_id = int(os.environ["context.teamId"])
-INPUT_PATH = "/import_images"
-file_upload = FileStorageUpload(team_id=team_id, path=INPUT_PATH, change_name_if_conflict=True)
+file_upload = FileStorageUpload(team_id=team_id, path=g.INPUT_PATH, change_name_if_conflict=True)
 team_files = Text(text="Team Files here")  # TODO check it
 items = [
     RadioGroup.Item(value="Drag & drop", content=file_upload),
@@ -143,7 +142,7 @@ class MyImport(sly.app.Import):
     def process(self, context: sly.app.Import.Context):
         try:
             paths = file_upload.get_uploaded_paths()
-            INPUT_PATH = file_upload.path
+            g.INPUT_PATH = file_upload.path
         except TypeError:
             raise TypeError("Grag & drop folders/files for uploading")
 
@@ -172,11 +171,11 @@ class MyImport(sly.app.Import):
         g.REMOVE_SOURCE = temporary_files.is_checked()
         g.NEED_DOWNLOAD = g.NORMALIZE_EXIF or g.REMOVE_ALPHA_CHANNEL or g.IS_ON_AGENT
 
-        dir_info = g.api.file.list(context.team_id, INPUT_PATH)
+        dir_info = g.api.file.list(context.team_id, g.INPUT_PATH)
 
         if g.NEED_DOWNLOAD:
-            sly.logger.info(f"Data will be downloaded: {INPUT_PATH}")
-            f.download_project(g.api, INPUT_PATH, context.team_id)
+            sly.logger.info(f"Data will be downloaded: {g.INPUT_PATH}")
+            f.download_project(g.api, g.INPUT_PATH, context.team_id)
 
         if dataset_id is not None:
             datasets_names, datasets_images_map = f.get_datasets_images_map(
@@ -242,9 +241,11 @@ class MyImport(sly.app.Import):
         if g.NEED_DOWNLOAD:
             sly.fs.remove_dir(dir_=g.STORAGE_DIR)
         if g.REMOVE_SOURCE and not g.IS_ON_AGENT:
-            g.api.file.remove(team_id=context.team_id, path=INPUT_PATH)
-            source_dir_name = INPUT_PATH.lstrip("/").rstrip("/")
+            g.api.file.remove(team_id=context.team_id, path=g.INPUT_PATH)
+            source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
             sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
+
+        run_button.disable()
 
 
 @run_button.click
