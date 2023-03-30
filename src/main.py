@@ -18,19 +18,15 @@ from supervisely.project.project_type import ProjectType
 from supervisely.app.widgets import (
     Container,
     Card,
-    Input,
-    Select,
     Checkbox,
     Text,
     FileStorageUpload,
     RadioGroup,
     OneOf,
-    SelectProject,
-    SelectDataset,
     Button,
+    DestinationProject,
 )
 
-# FOLDER ===========================================================================================
 team_id = int(os.environ["context.teamId"])
 file_upload = FileStorageUpload(team_id=team_id, path=g.INPUT_PATH, change_name_if_conflict=True)
 team_files = Text(text="Team Files here")  # TODO check it
@@ -43,91 +39,67 @@ one_of = OneOf(radio_group)
 widgets = Container(widgets=[radio_group, one_of])
 card_upload_or_tf = Card(content=widgets)
 
-input_project_name = Input(placeholder="Enter Project Name")
-card_project_name = Card(
-    title="Result Project Name",
-    description="Enter project name manually (optional) or keep empty to generate it automatically",
-    content=input_project_name,
-)
-
-
-folder = Container(widgets=[card_upload_or_tf, card_project_name])
-
-select_project = SelectProject(allowed_types=[ProjectType.IMAGES], compact=True)
-project = Container(widgets=[select_project, file_upload])
-
-select_dataset = SelectDataset()
-dataset = Container(widgets=[select_dataset, file_upload])
-
-selector_items = [
-    Select.Item(value="Folder", label="Folder", content=folder),
-    Select.Item(value="Images project", label="Images project", content=project),
-    Select.Item(value="Images dataset", label="Images dataset", content=dataset),
-]
-
-
-select = Select(items=selector_items)
-one_of = OneOf(conditional_widget=select)
-card1 = Card(
-    title="One of",
-    content=Container(widgets=[select, one_of]),
+input_card = Card(
+    title="Input Menu",
+    content=Container(widgets=[card_upload_or_tf]),
 )
 
 
 # ====================================================================================================================
-exif = Checkbox(content="Normalize exif")
-exif_text = Text(
-    text="If images you import has exif rotation or they look rotated in labeling interfaces please enable normalize exif",
-    status="info",
-)
 
-exif_data = Container(
-    widgets=[exif, exif_text],
-    direction="vertical",
+exif_main_text = Text(text="Normalize exif")
+exif_add_text = Text(
+    text="If images you import has exif rotation or they look rotated in labeling interfaces please enable normalize exif"
 )
+exif_checkboxes_data = Container(widgets=[exif_main_text, exif_add_text], direction="vertical")
+exif = Checkbox(content=exif_checkboxes_data)
 
-card_exif = Card(
-    content=exif_data,
+alpha_channel_main_text = Text(text="Remove alpha channel")
+alpha_channel_add_text = Text(text="If your images have alpha channel, enable remove alpha channel")
+alpha_channel_checkboxes_data = Container(
+    widgets=[alpha_channel_main_text, alpha_channel_add_text], direction="vertical"
 )
+alpha_channel = Checkbox(content=alpha_channel_checkboxes_data)
 
-alpha_channel = Checkbox(content="Remove alpha channel")
-alpha_channel_text = Text(
-    text="If your images have alpha channel, enable remove alpha channel",
-    status="info",
+
+temporary_files_main_text = Text(text="Remove temporary files after successful import")
+temporary_files_add_text = Text(
+    text="Removes source directory from Team Files after successful import"
 )
-
-alpha_channel_data = Container(
-    widgets=[alpha_channel, alpha_channel_text],
-    direction="vertical",
+temporary_files_checkboxes_data = Container(
+    widgets=[temporary_files_main_text, temporary_files_add_text], direction="vertical"
 )
+temporary_files = Checkbox(content=temporary_files_checkboxes_data, checked=True)
 
-card_alpha_channel = Card(
-    content=alpha_channel_data,
-)
 
-temporary_files = Checkbox(content="Remove temporary files after successful import", checked=True)
-temporary_files_text = Text(
-    text="Removes source directory from Team Files after successful import",
-    status="info",
-)
-
-temporary_files_data = Container(
+checkboxes_data = Container(
     widgets=[
+        exif,
+        alpha_channel,
         temporary_files,
-        temporary_files_text,
     ],
     direction="vertical",
+    gap=15,
 )
 
-card_temporary_files = Card(
-    content=temporary_files_data,
+checkboxes = Card(
+    content=checkboxes_data,
 )
+
+WORKSPACE_ID = int(os.environ["context.workspaceId"])
+
+destination_project = DestinationProject(workspace_id=WORKSPACE_ID, project_type=ProjectType.IMAGES)
+
+destination_card = Card(
+    content=destination_project,
+)
+
 # ===================================================================================================
 run_button = Button(text="Run")
 
 # ===================================================================================================
 layout = Container(
-    widgets=[card1, card_exif, card_alpha_channel, card_temporary_files, run_button],
+    widgets=[input_card, checkboxes, destination_card, run_button],
     direction="vertical",
     gap=15,
 )
@@ -141,31 +113,26 @@ class MyImport(sly.app.Import):
 
     def process(self, context: sly.app.Import.Context):
         try:
-            paths = file_upload.get_uploaded_paths()
             g.INPUT_PATH = file_upload.path
         except TypeError:
             raise TypeError("Grag & drop folders/files for uploading")
 
-        project_name = input_project_name.get_value()
-        project_id = select_project.get_selected_id()
+        project_name = destination_project.get_project_name()
+        project_id = destination_project.get_selected_project_id()
 
-        dataset_id = select_dataset.get_selected_id()
-        if dataset_id == [None]:
-            dataset_id = None
-        if dataset_id is not None:
-            dataset_info = g.api.dataset.get_info_by_id(dataset_id)
-            project_id = dataset_info.project_id
+        dataset_name = destination_project.get_dataset_name()
+        dataset_id = destination_project.get_selected_dataset_id()
 
         if project_id is None:
             if project_name == "":
-                project_name = f.get_project_name_from_input_path(paths[0])
+                project_name = g.DEFAULT_PROJECT_NAME
             project = g.api.project.create(
                 workspace_id=context.workspace_id, name=project_name, change_name_if_conflict=True
             )
         else:
             project = g.api.project.get_info_by_id(project_id)
 
-        g.IS_ON_AGENT = g.api.file.is_on_agent(paths[0])  # TODO check it
+        g.IS_ON_AGENT = g.api.file.is_on_agent(g.INPUT_PATH)  # TODO check it
         g.NORMALIZE_EXIF = exif.is_checked()
         g.REMOVE_ALPHA_CHANNEL = alpha_channel.is_checked()
         g.REMOVE_SOURCE = temporary_files.is_checked()
@@ -178,9 +145,16 @@ class MyImport(sly.app.Import):
             f.download_project(g.api, g.INPUT_PATH, context.team_id)
 
         if dataset_id is not None:
+            dataset_info = g.api.dataset.get_info_by_id(dataset_id)
             datasets_names, datasets_images_map = f.get_datasets_images_map(
                 dir_info, dataset_info.name
             )
+
+        elif dataset_name is not None:
+            if len(dataset_name) == 0:
+                dataset_name = g.DEFAULT_DATASET_NAME
+            datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, dataset_name)
+
         else:
             datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, None)
 
@@ -250,5 +224,5 @@ class MyImport(sly.app.Import):
 
 @run_button.click
 def run_app():
-    app = MyImport()
-    app.run()
+    import_images = MyImport()
+    import_images.run()

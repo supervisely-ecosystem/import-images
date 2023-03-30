@@ -6,14 +6,13 @@ import magic
 import supervisely as sly
 from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ext
 
-# import globals as g
 import src.globals as g
 
 
-def get_project_name_from_input_path(input_path: str) -> str:
-    """Returns project name from target sly folder name."""
-    full_path_dir = os.path.dirname(input_path)
-    return os.path.basename(full_path_dir)
+# def get_project_name_from_input_path(input_path: str) -> str:
+#     """Returns project name from target sly folder name."""
+#     full_path_dir = os.path.dirname(input_path)
+#     return os.path.basename(full_path_dir)
 
 
 def download_project(api: sly.Api, input_path: str, team_id: int):
