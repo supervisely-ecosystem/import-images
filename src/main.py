@@ -8,8 +8,7 @@ load_dotenv("local.env")
 load_dotenv(os.path.expanduser("~/supervisely.env"))
 sly.fs.clean_dir(sly.app.get_data_dir())
 
-# import functions as f
-# import globals as g
+
 import src.globals as g
 import src.functions as f
 
@@ -32,8 +31,10 @@ from supervisely.app.widgets import (
 )
 
 # FOLDER ===========================================================================================
-file_upload = Text(text="FileStorageUpload here")
-team_files = Text(text="Team Files here")
+team_id = int(os.environ["context.teamId"])
+INPUT_PATH = "/import_images"
+file_upload = FileStorageUpload(team_id=team_id, path=INPUT_PATH, change_name_if_conflict=True)
+team_files = Text(text="Team Files here")  # TODO check it
 items = [
     RadioGroup.Item(value="Drag & drop", content=file_upload),
     RadioGroup.Item(value="Team files", content=team_files),
@@ -50,14 +51,19 @@ card_project_name = Card(
     content=input_project_name,
 )
 
+
 folder = Container(widgets=[card_upload_or_tf, card_project_name])
+
 select_project = SelectProject(allowed_types=[ProjectType.IMAGES], compact=True)
+project = Container(widgets=[select_project, file_upload])
+
 select_dataset = SelectDataset()
+dataset = Container(widgets=[select_dataset, file_upload])
 
 selector_items = [
     Select.Item(value="Folder", label="Folder", content=folder),
-    Select.Item(value="Images project", label="Images project", content=select_project),
-    Select.Item(value="Images dataset", label="Images dataset", content=select_dataset),
+    Select.Item(value="Images project", label="Images project", content=project),
+    Select.Item(value="Images dataset", label="Images dataset", content=dataset),
 ]
 
 
@@ -129,39 +135,50 @@ layout = Container(
 
 app = sly.Application(layout=layout)
 
-# =========================================================================================================
-# =========================================================================================================
-# =========================================================================================================
-# =========================================================================================================
-# =========================================================================================================
+
 class MyImport(sly.app.Import):
     def is_path_required(self) -> bool:
         return False
 
     def process(self, context: sly.app.Import.Context):
-        dir_info = g.api.file.list(context.team_id, g.INPUT_PATH)
-        if len(dir_info) == 0:
-            raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
+        try:
+            paths = file_upload.get_uploaded_paths()
+            INPUT_PATH = file_upload.path
+        except TypeError:
+            raise TypeError("Grag & drop folders/files for uploading")
 
-        if context.project_id is None:
-            project_name = (
-                f.get_project_name_from_input_path(g.INPUT_PATH)
-                if len(g.OUTPUT_PROJECT_NAME) == 0
-                else g.OUTPUT_PROJECT_NAME
-            )
+        project_name = input_project_name.get_value()
+        project_id = select_project.get_selected_id()
+
+        dataset_id = select_dataset.get_selected_id()
+        if dataset_id == [None]:
+            dataset_id = None
+        if dataset_id is not None:
+            dataset_info = g.api.dataset.get_info_by_id(dataset_id)
+            project_id = dataset_info.project_id
+
+        if project_id is None:
+            if project_name == "":
+                project_name = f.get_project_name_from_input_path(paths[0])
             project = g.api.project.create(
                 workspace_id=context.workspace_id, name=project_name, change_name_if_conflict=True
             )
         else:
-            project = g.api.project.get_info_by_id(context.project_id)
+            project = g.api.project.get_info_by_id(project_id)
+
+        g.IS_ON_AGENT = g.api.file.is_on_agent(paths[0])  # TODO check it
+        g.NORMALIZE_EXIF = exif.is_checked()
+        g.REMOVE_ALPHA_CHANNEL = alpha_channel.is_checked()
+        g.REMOVE_SOURCE = temporary_files.is_checked()
+        g.NEED_DOWNLOAD = g.NORMALIZE_EXIF or g.REMOVE_ALPHA_CHANNEL or g.IS_ON_AGENT
+
+        dir_info = g.api.file.list(context.team_id, INPUT_PATH)
 
         if g.NEED_DOWNLOAD:
-            sly.logger.info(f"Data will be downloaded: {g.INPUT_PATH}")
-            f.download_project(g.api, g.INPUT_PATH, context.team_id)
+            sly.logger.info(f"Data will be downloaded: {INPUT_PATH}")
+            f.download_project(g.api, INPUT_PATH, context.team_id)
 
-        dataset_info = None
-        if context.dataset_id is not None:
-            dataset_info = g.api.dataset.get_info_by_id(context.dataset_id)
+        if dataset_id is not None:
             datasets_names, datasets_images_map = f.get_datasets_images_map(
                 dir_info, dataset_info.name
             )
@@ -169,7 +186,7 @@ class MyImport(sly.app.Import):
             datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, None)
 
         for dataset_name in datasets_names:
-            if context.dataset_id is None:
+            if dataset_id is None:
                 dataset_info = g.api.dataset.create(
                     project_id=project.id, name=dataset_name, change_name_if_conflict=True
                 )
@@ -225,10 +242,12 @@ class MyImport(sly.app.Import):
         if g.NEED_DOWNLOAD:
             sly.fs.remove_dir(dir_=g.STORAGE_DIR)
         if g.REMOVE_SOURCE and not g.IS_ON_AGENT:
-            g.api.file.remove(team_id=context.team_id, path=g.INPUT_PATH)
-            source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
+            g.api.file.remove(team_id=context.team_id, path=INPUT_PATH)
+            source_dir_name = INPUT_PATH.lstrip("/").rstrip("/")
             sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
 
 
-# app = MyImport()
-# app.run()
+@run_button.click
+def run_app():
+    app = MyImport()
+    app.run()
