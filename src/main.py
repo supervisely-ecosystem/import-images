@@ -41,7 +41,7 @@ class MyImport(sly.app.Import):
     def is_path_required(self) -> bool:
         return False
 
-    def process(self, context: sly.app.Import.Context):
+    def process(self):
 
         if self._folder is None:
             current_tab = self.radio_tabs.get_active_tab()
@@ -186,4 +186,4 @@ run_button = import_images.run_button
 
 @run_button.click
 def run_app():
-    import_images.run()
+    import_images.process()
