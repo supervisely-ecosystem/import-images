@@ -7,6 +7,15 @@
   "icon_cover": true,
   "icon_background": "#FFFFFF",
   "poster": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/poster.png",
+  "context_menu": {
+    "context_category": "Import",
+    "target": [
+      "files_folder",
+      "images_project",
+      "images_dataset",
+      "agent_folder"
+    ]
+  },
   "entrypoint": "python -m uvicorn src.main:app --host 0.0.0.0 --port 8000",
   "port": 8000
 }

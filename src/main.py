@@ -43,30 +43,45 @@ class MyImport(sly.app.Import):
 
     def process(self, context: sly.app.Import.Context):
 
-        current_tab = self.radio_tabs.get_active_tab()
-        if current_tab == self.drag_drop_title:
-            try:
-                g.INPUT_PATH = self.file_upload.path
+        if self._folder is None:
+            current_tab = self.radio_tabs.get_active_tab()
+            if current_tab == self.drag_drop_title:
+                try:
+                    g.INPUT_PATH = self.file_upload.path
 
-            except TypeError:
-                raise TypeError("Grag & drop folders/files for uploading")
+                except TypeError:
+                    raise TypeError("Grag & drop folders/files for uploading")
+            else:
+                g.INPUT_PATH = self.team_files.get_selected_paths[0]  # TODO check it
+
         else:
-            g.INPUT_PATH = self.team_files.get_selected_paths[0]  # TODO check it
+            g.INPUT_PATH = self._folder
 
-        project_name = self.destination_project.get_project_name()
-        project_id = self.destination_project.get_selected_project_id()
+        if self._project_id is None:
+            project_name = self.destination_project.get_project_name()
+            project_id = self.destination_project.get_selected_project_id()
 
-        dataset_name = self.destination_project.get_dataset_name()
-        dataset_id = self.destination_project.get_selected_dataset_id()
+            dataset_name = self.destination_project.get_dataset_name()
+            dataset_id = self.destination_project.get_selected_dataset_id()
 
-        if project_id is None:
-            if project_name == "":
-                project_name = g.DEFAULT_PROJECT_NAME
-            project = g.api.project.create(
-                workspace_id=context.workspace_id, name=project_name, change_name_if_conflict=True
-            )
+            if project_id is None:
+                if project_name == "":
+                    project_name = g.DEFAULT_PROJECT_NAME
+                project = g.api.project.create(
+                    workspace_id=self._workspace_id,
+                    name=project_name,
+                    change_name_if_conflict=True,
+                )
+            else:
+                project = g.api.project.get_info_by_id(project_id)
+
         else:
-            project = g.api.project.get_info_by_id(project_id)
+            project = g.api.project.get_info_by_id(self._project_id)
+            if self._dataset_id is None:
+                dataset_id = None
+                dataset_name = None
+            else:
+                dataset_id = self._dataset_id
 
         g.IS_ON_AGENT = g.api.file.is_on_agent(g.INPUT_PATH)  # TODO check it
         g.NORMALIZE_EXIF = exif.is_checked()
@@ -74,11 +89,11 @@ class MyImport(sly.app.Import):
         g.REMOVE_SOURCE = self.temporary_files.is_checked()
         g.NEED_DOWNLOAD = g.NORMALIZE_EXIF or g.REMOVE_ALPHA_CHANNEL or g.IS_ON_AGENT
 
-        dir_info = g.api.file.list(context.team_id, g.INPUT_PATH)
+        dir_info = g.api.file.list(self._team_id, g.INPUT_PATH)
 
         if g.NEED_DOWNLOAD:
             sly.logger.info(f"Data will be downloaded: {g.INPUT_PATH}")
-            f.download_project(g.api, g.INPUT_PATH, context.team_id)
+            f.download_project(g.api, g.INPUT_PATH, self._team_id)
 
         if dataset_id is not None:
             dataset_info = g.api.dataset.get_info_by_id(dataset_id)
@@ -124,7 +139,7 @@ class MyImport(sly.app.Import):
                     )
 
                     res_batch_names = f.validate_mimetypes(
-                        res_batch_names, res_batch_paths, context.team_id
+                        res_batch_names, res_batch_paths, self._team_id
                     )
 
                     g.api.image.upload_paths(
@@ -135,9 +150,7 @@ class MyImport(sly.app.Import):
                 else:
                     try:
 
-                        batch_names = f.validate_mimetypes(
-                            batch_names, batch_paths, context.team_id
-                        )
+                        batch_names = f.validate_mimetypes(batch_names, batch_paths, self._team_id)
                         g.api.image.upload_hashes(
                             dataset_id=dataset_info.id,
                             names=batch_names,
@@ -151,7 +164,7 @@ class MyImport(sly.app.Import):
         if g.NEED_DOWNLOAD:
             sly.fs.remove_dir(dir_=g.STORAGE_DIR)
         if g.REMOVE_SOURCE and not g.IS_ON_AGENT:
-            g.api.file.remove(team_id=context.team_id, path=g.INPUT_PATH)
+            g.api.file.remove(team_id=self._team_id, path=g.INPUT_PATH)
             source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
             sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
 
