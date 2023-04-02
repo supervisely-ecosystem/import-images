@@ -12,105 +12,29 @@ sly.fs.clean_dir(sly.app.get_data_dir())
 import src.globals as g
 import src.functions as f
 
-from supervisely.project.project_type import ProjectType
+from supervisely.app.widgets import Container, Checkbox, Text
 
 
-from supervisely.app.widgets import (
-    Container,
-    Card,
-    Checkbox,
-    Text,
-    FileStorageUpload,
-    RadioGroup,
-    OneOf,
-    Button,
-    DestinationProject,
-    RadioTabs,
-    TeamFilesSelector,
-)
+def initiate_current_widgets():
+    exif_main_text = Text(text="Normalize exif")
+    exif_add_text = Text(
+        text="If images you import has exif rotation or they look rotated in labeling interfaces please enable normalize exif"
+    )
+    exif_checkboxes_data = Container(widgets=[exif_main_text, exif_add_text], direction="vertical")
+    global exif
+    exif = Checkbox(content=exif_checkboxes_data)
 
-team_id = int(os.environ["context.teamId"])
-file_upload = FileStorageUpload(team_id=team_id, path=g.INPUT_PATH, change_name_if_conflict=True)
-# team_files = Text(text="Team Files here")  # TODO check it
-team_files = TeamFilesSelector(team_id=team_id)
-# items = [
-#     RadioGroup.Item(value="Drag & drop", content=file_upload),
-#     RadioGroup.Item(value="Team files", content=team_files),
-# ]
-# radio_group = RadioGroup(items=items)
-# one_of = OneOf(radio_group)
-# widgets = Container(widgets=[radio_group, one_of])
-# card_upload_or_tf = Card(content=widgets)
+    alpha_channel_main_text = Text(text="Remove alpha channel")
+    alpha_channel_add_text = Text(
+        text="If your images have alpha channel, enable remove alpha channel"
+    )
+    alpha_channel_checkboxes_data = Container(
+        widgets=[alpha_channel_main_text, alpha_channel_add_text], direction="vertical"
+    )
+    global alpha_channel
+    alpha_channel = Checkbox(content=alpha_channel_checkboxes_data)
 
-drag_drop = "Drag & drop"
-team_files = "Team files"
-titles = [drag_drop, team_files]
-contents = [file_upload, team_files]
-radio_tabs = RadioTabs(titles=titles, contents=contents)
-widgets = Container(widgets=[radio_tabs])
-card_upload_or_tf = Card(content=widgets)
-
-input_card = Card(
-    title="Input Menu",
-    content=Container(widgets=[card_upload_or_tf]),
-)
-
-exif_main_text = Text(text="Normalize exif")
-exif_add_text = Text(
-    text="If images you import has exif rotation or they look rotated in labeling interfaces please enable normalize exif"
-)
-exif_checkboxes_data = Container(widgets=[exif_main_text, exif_add_text], direction="vertical")
-exif = Checkbox(content=exif_checkboxes_data)
-
-alpha_channel_main_text = Text(text="Remove alpha channel")
-alpha_channel_add_text = Text(text="If your images have alpha channel, enable remove alpha channel")
-alpha_channel_checkboxes_data = Container(
-    widgets=[alpha_channel_main_text, alpha_channel_add_text], direction="vertical"
-)
-alpha_channel = Checkbox(content=alpha_channel_checkboxes_data)
-
-
-temporary_files_main_text = Text(text="Remove temporary files after successful import")
-temporary_files_add_text = Text(
-    text="Removes source directory from Team Files after successful import"
-)
-temporary_files_checkboxes_data = Container(
-    widgets=[temporary_files_main_text, temporary_files_add_text], direction="vertical"
-)
-temporary_files = Checkbox(content=temporary_files_checkboxes_data, checked=True)
-
-
-checkboxes_data = Container(
-    widgets=[
-        exif,
-        alpha_channel,
-        temporary_files,
-    ],
-    direction="vertical",
-    gap=15,
-)
-
-checkboxes = Card(
-    content=checkboxes_data,
-)
-
-WORKSPACE_ID = int(os.environ["context.workspaceId"])
-
-destination_project = DestinationProject(workspace_id=WORKSPACE_ID, project_type=ProjectType.IMAGES)
-
-destination_card = Card(
-    content=destination_project,
-)
-
-run_button = Button(text="Run")
-
-layout = Container(
-    widgets=[input_card, checkboxes, destination_card, run_button],
-    direction="vertical",
-    gap=15,
-)
-
-app = sly.Application(layout=layout)
+    return [exif, alpha_channel]
 
 
 class MyImport(sly.app.Import):
@@ -118,21 +42,22 @@ class MyImport(sly.app.Import):
         return False
 
     def process(self, context: sly.app.Import.Context):
-        current_tab = radio_tabs.get_active_tab()
-        if current_tab == drag_drop:
+
+        current_tab = self.radio_tabs.get_active_tab()
+        if current_tab == self.drag_drop_title:
             try:
-                g.INPUT_PATH = file_upload.path
+                g.INPUT_PATH = self.file_upload.path
 
             except TypeError:
                 raise TypeError("Grag & drop folders/files for uploading")
         else:
-            g.INPUT_PATH = team_files.get_selected_paths[0]
+            g.INPUT_PATH = self.team_files.get_selected_paths[0]  # TODO check it
 
-        project_name = destination_project.get_project_name()
-        project_id = destination_project.get_selected_project_id()
+        project_name = self.destination_project.get_project_name()
+        project_id = self.destination_project.get_selected_project_id()
 
-        dataset_name = destination_project.get_dataset_name()
-        dataset_id = destination_project.get_selected_dataset_id()
+        dataset_name = self.destination_project.get_dataset_name()
+        dataset_id = self.destination_project.get_selected_dataset_id()
 
         if project_id is None:
             if project_name == "":
@@ -146,7 +71,7 @@ class MyImport(sly.app.Import):
         g.IS_ON_AGENT = g.api.file.is_on_agent(g.INPUT_PATH)  # TODO check it
         g.NORMALIZE_EXIF = exif.is_checked()
         g.REMOVE_ALPHA_CHANNEL = alpha_channel.is_checked()
-        g.REMOVE_SOURCE = temporary_files.is_checked()
+        g.REMOVE_SOURCE = self.temporary_files.is_checked()
         g.NEED_DOWNLOAD = g.NORMALIZE_EXIF or g.REMOVE_ALPHA_CHANNEL or g.IS_ON_AGENT
 
         dir_info = g.api.file.list(context.team_id, g.INPUT_PATH)
@@ -230,10 +155,22 @@ class MyImport(sly.app.Import):
             source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
             sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
 
-        run_button.disable()
+        self.run_button.disable()
+        sly.app.show_dialog(
+            title="Import done",
+            description="Import successfully completed",
+            status="success",
+        )
+
+
+import_images = MyImport()
+main_widgets_init = import_images.initiate_import_widgets(
+    input_path=g.INPUT_PATH, current_widgets=initiate_current_widgets()
+)
+app = import_images.app
+run_button = import_images.run_button
 
 
 @run_button.click
 def run_app():
-    import_images = MyImport()
     import_images.run()
