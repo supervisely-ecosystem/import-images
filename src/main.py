@@ -38,9 +38,6 @@ def initiate_current_widgets():
 
 
 class MyImport(sly.app.Import):
-    def is_path_required(self) -> bool:
-        return False
-
     def process(self):
 
         if self._folder is None:
