@@ -117,4 +117,4 @@ App can be launched from ecosystem, team files, images project and images datase
 ### Demo
 Example of uploading a flat set of images to Team Files:
 
-![](https://i.imgur.com/EkLt9ii.gif)
+![](media/demo.gif)
