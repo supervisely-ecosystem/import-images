@@ -1,33 +1,37 @@
 {
-  "name": "Import Images",
-  "type": "app",
-  "categories": ["import", "images", "essentials"],
-  "description": "Drag and drop images to Supervisely, supported formats: .jpg, .jpeg, jpe, .mpo, .bmp, .png, .tiff, .tif, .webp, .nrrd",
-  "docker_image": "supervisely/base-py-sdk:6.72.48",
-  "main_script": "src/main.py",
-  "modal_template": "src/modal.html",
-  "modal_template_state": {
-    "files": "",
-    "normalize_exif": false,
-    "remove_alpha_channel": false,
-    "remove_source": true,
-    "project_name": ""
-  },
-  "task_location": "workspace_tasks",
-  "icon": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/icon.png",
-  "icon_cover": true,
-  "icon_background": "#FFFFFF",
-  "min_agent_version": "6.7.4",
-  "min_instance_version": "6.5.46",
-  "headless": true,
-  "context_menu": {
-    "context_category": "Import",
-    "target": [
-      "files_folder",
-      "images_project",
-      "images_dataset",
-      "agent_folder"
-    ]
-  },
-  "poster": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/poster.png"
+    "name": "Import Images",
+    "type": "app",
+    "categories": [
+        "import",
+        "images",
+        "essentials"
+    ],
+    "description": "Drag and drop images to Supervisely, supported formats: .jpg, .jpeg, jpe, .mpo, .bmp, .png, .tiff, .tif, .webp, .nrrd",
+    "docker_image": "supervisely/base-py-sdk:6.72.78",
+    "main_script": "src/main.py",
+    "modal_template": "src/modal.html",
+    "modal_template_state": {
+        "files": "",
+        "normalize_exif": false,
+        "remove_alpha_channel": false,
+        "remove_source": true,
+        "project_name": ""
+    },
+    "task_location": "workspace_tasks",
+    "icon": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/icon.png",
+    "icon_cover": true,
+    "icon_background": "#FFFFFF",
+    "min_agent_version": "6.7.4",
+    "min_instance_version": "6.5.46",
+    "headless": true,
+    "context_menu": {
+        "context_category": "Import",
+        "target": [
+            "files_folder",
+            "images_project",
+            "images_dataset",
+            "agent_folder"
+        ]
+    },
+    "poster": "https://github.com/supervisely-ecosystem/import-images/releases/download/v1.0.0/poster.png"
 }
