@@ -1,54 +1,135 @@
 <div>
-
-    <div>
-        <sly-file-storage-upload v-if="context.slyProjectId"
-                                 :options="{ folder: '/import/import-images/' + context.formId + '/' }"
-                                 @files-uploaded="state.files = '/import/import-images/' + context.formId + '/'">
-        </sly-file-storage-upload>
+    <div
+      style="text-align: center"
+      v-if="!context.slyFile && !context.slyFolder && !context.slyProjectId && !context.slyDatasetId"
+    >
+      <b>Please select Input Context Menu to proceed</b>
     </div>
-
-
-    <div class="fflex align-start" style="flex-direction: column; margin: 0 0 20px 0"
-         v-if="!context.slyProjectId">
+    <div v-else>
+      <div v-if="!context.slyFolder && !context.slyFile">
+        <el-tabs v-model="state.isDragMode">
+          <el-tab-pane label="Drag & drop" @tab-click="state.isDragMode = true">
+            <sly-file-storage-upload
+              :options="{ folder: `${data.importFolder}${context.formId}/` }"
+              @files-uploaded="(files) => {
+                  let baseFolderPrefix = `${data.importFolder}${context.formId}/`;
+                  let folderPrefix = '';
+                  files.uploadedFiles.forEach((f, idx) => {
+                    const filePathParts = f.path.replace(baseFolderPrefix, '').split('/');
+                    if (filePathParts?.length > 1) {
+                      if (idx === 0) { folderPrefix = filePathParts[0]; }
+                      else if (filePathParts[0] !== folderPrefix) { folderPrefix = ''; }
+                    } else { folderPrefix = ''; }
+                  });
+                  if (folderPrefix) { baseFolderPrefix += `${folderPrefix}/`; }
+                  state.slyFolder = baseFolderPrefix;
+              }"
+            >
+            </sly-file-storage-upload>
+          </el-tab-pane>
+          <el-tab-pane label="Team files" @tab-click="state.isDragMode = false">
+            <sly-select-team-files
+              :team-id="context.teamId"
+              :options="{maxHeight: '250px', selectionFileType: 'folder'}"
+              @items-selected="(files) => { 
+                if (files && files.length) { 
+                  let setName = 'slyFolder';
+                  let clearName = 'slyFile';
+                  if (files[0].type === 'file') { setName = 'slyFile'; clearName = 'slyFolder'  }
+                  state[setName] = files[0].path;
+                  state[clearName] = null;
+                } else { 
+                  state.slyFolder = null; state.slyFile = null; 
+                }
+              }"
+            >
+            </sly-select-team-files>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+  
+      <div v-if="!context.slyProjectId">
         <sly-field
-                title="Result Project Name"
-                description="Enter project name manually (optional) or keep empty to generate it automatically">
+          title="Import mode"
+          description="Select whether you want to import files to new or existing project"
+        >
+          <el-select v-model="state.importMode">
+            <el-option
+              key="new"
+              label="Create new project"
+              value="new"
+            ></el-option>
+            <el-option
+              key="project"
+              label="Upload to existing project"
+              value="project"
+            ></el-option>
+            <el-option
+              key="dataset"
+              label="Upload to existing dataset"
+              value="dataset"
+            ></el-option>
+          </el-select>
         </sly-field>
-        <el-input placeholder="Enter Project Name" v-model="state.project_name"></el-input>
-    </div>
-
-    <div class="fflex align-start">
-        <el-checkbox v-model="state.normalize_exif" class="mt10 mr10"></el-checkbox>
+      </div>
+  
+      <div v-if="state.importMode === 'new' && !context.slyProjectId">
+        <sly-field
+          title="Result Project Name"
+          description="Enter project name manually (optional) or keep empty to generate it automatically"
+        >
+        </sly-field>
+        <el-input
+          placeholder="Enter Project Name"
+          v-model="state.projectName"
+        ></el-input>
+      </div>
+  
+      <div v-if="state.importMode === 'project' && !context.slyProjectId">
+        <sly-select-project
+          :workspace-id="context.workspaceId"
+          :project-id.sync="state.slyProjectId"
+          :options="{availableTypes: ['images']}"
+        ></sly-select-project>
+      </div>
+  
+      <div v-if="state.importMode === 'dataset' && !context.slyProjectId">
+        <sly-select-project
+          :workspace-id="context.workspaceId"
+          :project-id.sync="state.slyProjectId"
+          :options="{availableTypes: ['images']}"
+        ></sly-select-project>
+        <sly-select-dataset
+          :project-id="state.slyProjectId"
+          :datasets.sync="state.datasets"
+        ></sly-select-dataset>
+      </div>
+  
+      <div class="fflex align-start">
+        <el-checkbox v-model="state.normalizeExif" class="mt10 mr10"></el-checkbox>
         <sly-field class="mt20"
-                   title="Normalize exif"
-                   description="If images you import has exif rotation or they look rotated in labeling interfaces please enable
+                  title="Normalize exif"
+                  description="If images you import has exif rotation or they look rotated in labeling interfaces please enable
            normalize exif">
         </sly-field>
-    </div>
+      </div>
 
-    <div class="fflex align-start">
-        <el-checkbox v-model="state.remove_alpha_channel" class="mt10 mr10"></el-checkbox>
+      <div class="fflex align-start">
+        <el-checkbox v-model="state.removeAlphaChannel" class="mt10 mr10"></el-checkbox>
         <sly-field class="mt20"
-                   title="Remove alpha channel"
-                   description="If your images have alpha channel, enable remove alpha channel">
+                  title="Remove alpha channel"
+                  description="If your images have alpha channel, enable remove alpha channel">
         </sly-field>
+      </div>
+      <div class="fflex align-start" v-if="!state.prefNodeId">
+        <el-checkbox v-model="state.removeSource" class="mt10 mr10"></el-checkbox>
+        <sly-field
+          class="mt20"
+          title="Remove temporary files after successful import"
+          description="Removes source directory from Team Files after successful import"
+        >
+        </sly-field>
+      </div>
     </div>
-
-    <!-- <div class="fflex align-start">
-        <el-checkbox v-model="state.convert_tiff" class="mt10 mr10"></el-checkbox>
-        <sly-field class="mt20"
-                   title="Convert .tiff to .jpeg"
-                   description="Supervisely currently doesn't support .tiff image format, but if you want to import
-                .tiff images, enable 'convert .tiff to .jpeg'">
-        </sly-field>
-    </div> -->
-
-    <div class="fflex align-start" v-if="!state.prefNodeId">
-        <el-checkbox v-model="state.remove_source" class="mt10 mr10"></el-checkbox>
-        <sly-field class="mt20"
-                   title="Remove temporary files after successful import"
-                   description="Removes source directory from Team Files after successful import">
-        </sly-field>
-    </div>
-
-</div>
+  </div>
+  
