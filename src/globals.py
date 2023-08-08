@@ -52,7 +52,7 @@ REMOVE_ALPHA_CHANNEL = bool(strtobool(os.getenv("modal.state.remove_alpha_channe
 sly.logger.debug(f"INPUT_PATH before calling api.file.is_on_agent(): {INPUT_PATH}")
 sly.logger.debug(f"Project ID: {PROJECT_ID}, Dataset ID: {DATASET_ID}")
 
-if PROJECT_ID is not None and DATASET_ID is not None:
+if PROJECT_ID is not None or DATASET_ID is not None:
     sly.logger.debug("Project or dataset IDs was specified, will not try to get from agent")
     IS_ON_AGENT = False
 else:
