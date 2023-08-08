@@ -9,23 +9,10 @@
       <div v-if="!context.slyFolder && !context.slyFile">
         <el-tabs v-model="state.isDragMode">
           <el-tab-pane label="Drag & drop" @tab-click="state.isDragMode = true">
-            <sly-file-storage-upload
-              :options="{ folder: `${data.importFolder}${context.formId}/` }"
-              @files-uploaded="(files) => {
-                  let baseFolderPrefix = `${data.importFolder}${context.formId}/`;
-                  let folderPrefix = '';
-                  files.uploadedFiles.forEach((f, idx) => {
-                    const filePathParts = f.path.replace(baseFolderPrefix, '').split('/');
-                    if (filePathParts?.length > 1) {
-                      if (idx === 0) { folderPrefix = filePathParts[0]; }
-                      else if (filePathParts[0] !== folderPrefix) { folderPrefix = ''; }
-                    } else { folderPrefix = ''; }
-                  });
-                  if (folderPrefix) { baseFolderPrefix += `${folderPrefix}/`; }
-                  state.slyFolder = baseFolderPrefix;
-              }"
-            >
-            </sly-file-storage-upload>
+        <sly-file-storage-upload v-if="context.slyProjectId"
+                                 :options="{ folder: '/import/import-images/' + context.formId + '/' }"
+                                 @files-uploaded="state.files = '/import/import-images/' + context.formId + '/'">
+        </sly-file-storage-upload>
           </el-tab-pane>
           <el-tab-pane label="Team files" @tab-click="state.isDragMode = false">
             <sly-select-team-files
