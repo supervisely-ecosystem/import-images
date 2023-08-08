@@ -52,11 +52,11 @@ REMOVE_ALPHA_CHANNEL = bool(strtobool(os.getenv("modal.state.remove_alpha_channe
 sly.logger.debug(f"INPUT_PATH before calling api.file.is_on_agent(): {INPUT_PATH}")
 sly.logger.debug(f"Project ID: {PROJECT_ID}, Dataset ID: {DATASET_ID}")
 
-if not PROJECT_ID and not DATASET_ID:
-    sly.logger.debug(f"Project and Dataset IDs are None, not using agent")
+if PROJECT_ID is not None and DATASET_ID is not None:
+    sly.logger.debug("Project or dataset IDs was specified, will not try to get from agent")
     IS_ON_AGENT = False
 else:
-    sly.logger.debug(f"Project or Dataset ID is not None, will try to get from agent")
+    sly.logger.debug("Project and dataset IDs was not specified, will try to get from agent")
     IS_ON_AGENT = api.file.is_on_agent(INPUT_PATH)
 NEED_DOWNLOAD = NORMALIZE_EXIF or REMOVE_ALPHA_CHANNEL or IS_ON_AGENT
 REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source", "False")))
