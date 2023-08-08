@@ -37,13 +37,17 @@ if os.environ.get("modal.state.slyDatasetId") is not None:
     DATASET_ID = int(os.environ.get("modal.state.slyDatasetId"))
 
 INPUT_PATH = os.environ.get("modal.state.files", None)
+sly.logger.debug(f"INPUT_PATH on app init: {INPUT_PATH}")
 if INPUT_PATH is None or INPUT_PATH == "":
+    sly.logger.debug('INPUT_PATH is None or "", will try to get from slyFolder')
     INPUT_PATH = os.environ.get("modal.state.slyFolder")
+    sly.logger.debug(f"INPUT_PATH from slyFolder: {INPUT_PATH}")
 
 OUTPUT_PROJECT_NAME = os.environ.get("modal.state.project_name", "")
 
 NORMALIZE_EXIF = bool(strtobool(os.getenv("modal.state.normalize_exif", "False")))
 REMOVE_ALPHA_CHANNEL = bool(strtobool(os.getenv("modal.state.remove_alpha_channel", "False")))
+sly.logger.debug(f"INPUT_PATH before calling api.file.is_on_agent(): {INPUT_PATH}")
 IS_ON_AGENT = api.file.is_on_agent(INPUT_PATH)
 NEED_DOWNLOAD = NORMALIZE_EXIF or REMOVE_ALPHA_CHANNEL or IS_ON_AGENT
 REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source", "False")))
