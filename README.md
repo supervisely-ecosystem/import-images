@@ -40,6 +40,7 @@ Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo
 #### Input files structure
 
 directories define dataset names. Images in root directory will be moved to dataset with name "`ds0`".
+ℹ️ You can download the archive with data example [here](https://github.com/supervisely-ecosystem/import-images/files/12537000/my_images_project.zip).
  
 ```
 .
