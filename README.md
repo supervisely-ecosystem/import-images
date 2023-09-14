@@ -39,8 +39,11 @@ Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo
 
 #### Input files structure
 
-directories define dataset names. Images in root directory will be moved to dataset with name "`ds0`".<br>
 ℹ️ You can download the archive with data example [here](https://github.com/supervisely-ecosystem/import-images/files/12537000/my_images_project.zip).
+
+**Team Files**
+
+Subdirectories inside the root directory (the one that you run the app from or select in the team files selector when starting the app from the ecosystem) define dataset names. Images in the root directory will be moved to a dataset with the name "`ds0`".
  
 ```
 .
@@ -62,6 +65,30 @@ my_images_project
 ```
 
 As a result we will get project with 3 datasets with the names: `ds0`, `my_folder1`, `my_folder3`. Dataset `my_folder1` will also contain images from `my_folder2` directory.
+
+**Drag & Drop**
+
+Think of a drag & drop area as the root directory for your datasets that is empty for now. Drop multiple folders with images into the drag & drop area. Directories that you drop inside the drag and drop area are defined as datasets. If you drag & drop images without a folder, these images will be moved to the dataset with the name "`ds0`".
+
+```
+├── img_01.jpeg
+├── ...
+├── img_09.png
+├── my_folder1
+│   ├── img_01.JPG
+│   ├── img_02.jpeg
+│   └── my_folder2
+│       ├── img_13.jpeg
+│       ├── ...
+│       └── img_9999.png
+└── my_folder3
+    ├── img_01.JPG
+    ├── img_02.jpeg
+    └── img_03.png
+```
+
+As a result we will get project with 3 datasets with the names: `ds0`, `my_folder1`, `my_folder3`. Dataset `my_folder1` will also contain images from `my_folder2` directory.
+
 
 # How to Run
 
