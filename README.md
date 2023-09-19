@@ -28,6 +28,8 @@ Images in `.nrrd` format can be viewed in annotation tool v2 only.
 
 Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`, `.nrrd`(annotation tool v2 only). 
 
+🗄️ Starting from version `1.2.22` the application supports uploading the files from a single archive. To do so, change the context menu to the File.
+
 🔥 Starting from version `v1.2.0` application automatically compares image file extension with actual image mimetype and corrects extension if needed. For example: if you import image `my_image.png` but it is actually a TIFF then the image will be automatically renamed to `my_image.tiff`.
 
 🏋️ Starting from version `v1.2.7` application supports import from special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using drag-ang-drop mechanism:
