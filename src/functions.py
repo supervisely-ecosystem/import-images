@@ -14,7 +14,7 @@ import globals as g
 def get_project_name_from_input_path(input_path: str) -> str:
     """Returns project name from target sly folder name."""
     full_path_dir = os.path.dirname(input_path)
-    return os.path.basename(full_path_dir)
+    return os.path.basename(full_path_dir) or sly.fs.get_file_name(input_path)
 
 
 def download_project(api: sly.Api, input_path):
