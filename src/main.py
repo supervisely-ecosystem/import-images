@@ -32,6 +32,9 @@ def import_images(api: sly.Api, task_id: int):
             if len(g.OUTPUT_PROJECT_NAME) == 0
             else g.OUTPUT_PROJECT_NAME
         )
+
+        sly.logger.debug(f"Project name: {project_name}")
+
         project = api.project.create(
             workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
         )
