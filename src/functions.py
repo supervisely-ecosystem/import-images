@@ -55,6 +55,7 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
     sly.logger.debug(f"Archive {download_path} unpacked to {unpacked_path}")
 
     upload_path = f"/import-images/temp/{sly.fs.get_file_name(archive_path)}"
+    upload_path = api.file.get_free_dir_name(g.TEAM_ID, upload_path)
     api.file.upload_directory(g.TEAM_ID, unpacked_path, upload_path)
     sly.logger.debug(f"Unpacked files uploaded to {upload_path}")
 
