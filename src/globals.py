@@ -52,10 +52,10 @@ NORMALIZE_EXIF = bool(strtobool(os.getenv("modal.state.normalize_exif", "False")
 REMOVE_ALPHA_CHANNEL = bool(strtobool(os.getenv("modal.state.remove_alpha_channel", "False")))
 
 IS_ON_AGENT = api.file.is_on_agent(INPUT_PATH)
-sly.logger.debug(f"App starting... IS_ON_AGENT: {IS_ON_AGENT}")
+sly.logger.debug(f"App starting... IS_ON_AGENT: {IS_ON_AGENT}.")
 
 NEED_DOWNLOAD = NORMALIZE_EXIF or REMOVE_ALPHA_CHANNEL or IS_ON_AGENT
-sly.logger.debug(f"App starting... NEED_DOWNLOAD: {NEED_DOWNLOAD}")
+sly.logger.debug(f"App starting... NEED_DOWNLOAD: {NEED_DOWNLOAD}.")
 
 REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source", "False")))
 
