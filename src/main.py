@@ -18,12 +18,23 @@ def import_images(api: sly.Api, task_id: int):
     if len(dir_info) == 0:
         raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
 
+    sly.logger.debug(f"Number of files in selected directory: {len(dir_info)}")
+
+    if len(dir_info) == 1:
+        sly.logger.debug(
+            "There is only one file in selected directory, will handle it as an archive"
+        )
+        dir_info = f.unpack_archive_on_team_files(api, g.INPUT_PATH)
+
     if g.PROJECT_ID is None:
         project_name = (
             f.get_project_name_from_input_path(g.INPUT_PATH)
             if len(g.OUTPUT_PROJECT_NAME) == 0
             else g.OUTPUT_PROJECT_NAME
         )
+
+        sly.logger.debug(f"Project name: {project_name}")
+
         project = api.project.create(
             workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
         )
@@ -78,7 +89,6 @@ def import_images(api: sly.Api, task_id: int):
                 )
             else:
                 try:
-
                     batch_names = f.validate_mimetypes(batch_names, batch_paths)
                     api.image.upload_hashes(
                         dataset_id=dataset_info.id,

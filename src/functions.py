@@ -2,6 +2,8 @@ import mimetypes
 import os
 import pathlib
 
+from typing import List
+
 import magic
 import supervisely as sly
 from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ext
@@ -12,7 +14,7 @@ import globals as g
 def get_project_name_from_input_path(input_path: str) -> str:
     """Returns project name from target sly folder name."""
     full_path_dir = os.path.dirname(input_path)
-    return os.path.basename(full_path_dir)
+    return os.path.basename(full_path_dir) or sly.fs.get_file_name(input_path)
 
 
 def download_project(api: sly.Api, input_path):
@@ -28,6 +30,41 @@ def download_project(api: sly.Api, input_path):
         g.TEAM_ID, remote_path=remote_proj_dir, local_save_path=local_save_dir
     )
     return local_save_dir
+
+
+def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.file_api.FileInfo]:
+    sly.logger.debug(f"Unpacking archive {archive_path} on Team Files")
+    archives_dir = os.path.join(g.STORAGE_DIR, "archives")
+    unpacked_dir = os.path.join(g.STORAGE_DIR, "unpacked")
+    sly.fs.mkdir(archives_dir)
+    sly.logger.debug(f"Path to the archives: {archives_dir}, to unpacked files: {unpacked_dir}")
+
+    download_path = os.path.join(archives_dir, sly.fs.get_file_name_with_ext(archive_path))
+    api.file.download(g.TEAM_ID, archive_path, download_path)
+    sly.logger.debug(f"Archive {archive_path} downloaded to {download_path}")
+
+    unpacked_path = os.path.join(unpacked_dir, sly.fs.get_file_name(archive_path))
+    sly.fs.mkdir(unpacked_path)
+    try:
+        sly.fs.unpack_archive(download_path, unpacked_path)
+    except Exception as e:
+        filename = sly.fs.get_file_name_with_ext(download_path)
+        raise RuntimeError(
+            f"Provided file is not an archive: {filename} or it is corrupted: {str(e)}"
+        )
+    sly.logger.debug(f"Archive {download_path} unpacked to {unpacked_path}")
+
+    upload_path = f"/import-images/temp/{sly.fs.get_file_name(archive_path)}"
+    upload_path = api.file.get_free_dir_name(g.TEAM_ID, upload_path)
+
+    sly.logger.debug(f"Uploading unpacked files to {upload_path}")
+
+    api.file.upload_directory(g.TEAM_ID, unpacked_path, upload_path)
+    sly.logger.debug(f"Unpacked files uploaded to {upload_path}")
+
+    dir_info = api.file.list(g.TEAM_ID, upload_path)
+
+    return dir_info
 
 
 def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
@@ -76,7 +113,7 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
         else:
             try:
                 ds_name = get_dataset_name(full_path_file.lstrip("/"))
-            except:
+            except Exception:
                 ds_name = g.DEFAULT_DATASET_NAME
 
         if ds_name not in datasets_images_map.keys():
