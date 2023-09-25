@@ -22,9 +22,18 @@ def import_images(api: sly.Api, task_id: int):
 
     if len(dir_info) == 1:
         sly.logger.debug(
-            "There is only one file in selected directory, will handle it as an archive"
+            f"There is only one file in directory {g.INPUT_PATH}. "
+            "Will check if it is an archive or an image."
         )
-        dir_info = f.unpack_archive_on_team_files(api, g.INPUT_PATH)
+        file_name = dir_info[0].get("name")
+        file_ext = sly.fs.get_file_ext(file_name)
+        if file_ext in g.SUPPORTED_IMG_EXTS:
+            sly.logger.debug(f"File {file_name} is an image.")
+        else:
+            sly.logger.debug(
+                f"File {file_name} is not an image, will try to handle it as an archive."
+            )
+            dir_info = f.unpack_archive_on_team_files(api, g.INPUT_PATH)
 
     if g.PROJECT_ID is None:
         project_name = (
