@@ -33,7 +33,7 @@ def import_images(api: sly.Api, task_id: int):
             sly.logger.debug(
                 f"File {file_name} is not an image, will try to handle it as an archive."
             )
-            dir_info = f.unpack_archive_on_team_files(api, g.INPUT_PATH)
+            dir_info = f.unpack_archive_on_team_files(api, dir_info[0].get("path"))
 
     if g.PROJECT_ID is None:
         project_name = (
