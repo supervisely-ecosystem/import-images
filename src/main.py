@@ -61,6 +61,9 @@ def import_images(api: sly.Api, task_id: int):
     else:
         datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, None)
 
+    sly.logger.debug(f"Datasets names: {datasets_names}")
+    sly.logger.debug(f"Datasets images map: {datasets_images_map}")
+
     for dataset_name in datasets_names:
         if g.DATASET_ID is None:
             dataset_info = api.dataset.create(
