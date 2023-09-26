@@ -146,14 +146,22 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
 
 def get_dataset_name(file_path: str, default: str = "ds0") -> str:
     """Dataset name from image path."""
+    sly.logger.debug(f"get_dataset_name() started parsing  file_path: {file_path}")
     dir_path = os.path.split(file_path)[0]
     ds_name = default
     path_parts = pathlib.Path(dir_path).parts
     if len(path_parts) != 1:
-        if g.INPUT_PATH.startswith("/import/import-images/"):
-            ds_name = path_parts[3]
-        else:
-            ds_name = path_parts[-1]
+        sly.logger.debug(f"get_dataset_name() found following path_parts: {path_parts}")
+
+        # ? This code uses root directory after drag-n-drop, ignoring structure.
+        # ? Why is it here?
+        # if g.INPUT_PATH.startswith("/import/import-images/"):
+        #     ds_name = path_parts[3]
+        # else:
+        ds_name = path_parts[-1]
+
+    sly.logger.debug(f"get_dataset_name() will return ds_name: {ds_name}")
+
     return ds_name
 
 
