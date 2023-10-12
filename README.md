@@ -22,7 +22,7 @@
 
 This app allows you to upload only images without any annotations. 
 
-By default, flags "normalize EXIF", "remove alpha channel" and "convert .tiff to .jpeg" are disabled.
+By default, flags "normalize EXIF" and "remove alpha channel" are disabled.
  - If images you import have EXIF rotation, or they look rotated in labeling interfaces please enable "normalize EXIF" flag in the modal window.
  - If your images have alpha channel, enable "remove alpha channel" flag.
 
@@ -30,7 +30,7 @@ By default, flags "normalize EXIF", "remove alpha channel" and "convert .tiff to
 
 Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`, `.nrrd`.
 
-⚠️ Images in `.nrrd` format can be viewed in annotation tool v2 only.
+⚠️ Images in `.nrrd` format can be viewed in **Image annotation tool v2** only.
 
 #### Changelog
 🗄️ `1.2.22` Starting from this version application supports uploading the files from a single archive. To do so, change the context menu to the File.
