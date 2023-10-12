@@ -168,8 +168,8 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
 def validate_mimetypes(images_names: list, images_paths: list) -> list:
     """Validate mimetypes for images."""
     
+    names_to_skip = []    
     mimetypes.add_type("image/webp", ".webp") # to extend types_map
-
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
         if g.NEED_DOWNLOAD:
@@ -182,10 +182,21 @@ def validate_mimetypes(images_names: list, images_paths: list) -> list:
             continue
 
         new_img_ext = mimetypes.guess_extension(mimetype)
+        
+        if new_img_ext is None:
+            sly.logger.warn(
+                f"Image '{image_name}' is not supported and will not be imported. Only the following formats are supported: JPG, JPEG, JPE, BMP, PNG, WEBP, MPO, TIFF, NRRD"
+            )
+            names_to_skip.append(image_name)
+            continue
+
         new_img_name = f"{get_file_name(image_name)}{new_img_ext}"
         images_names[idx] = new_img_name
         sly.logger.warn(
-            f"Image {image_name} extension doesn't have correct mimetype {mimetype}. Image has been converted to {new_img_ext}"
+            f"The image '{image_name}' extension was automatically changed to '{new_img_ext}' according to its MIME type '{mimetype}'"
         )
+
+    names_to_skip = set(names_to_skip)
+    images_names = [x for x in images_names if x not in names_to_skip]
 
     return images_names
