@@ -20,28 +20,33 @@
 
 # Overview
 
-This app allows you to upload only images without any annotations. By default, flags "normalize exif", "remove alpha channel" and "convert .tiff to .jpeg" are disabled. 
-If images you import have exif rotation, or they look rotated in labeling interfaces please enable "normalize exif" flag in the modal window.
-If your images have alpha channel, enable "remove alpha channel" flag. 
-Be aware that "remove files after successful import" flag is enabled by default, it will automatically remove source directory after import. 
-Images in `.nrrd` format can be viewed in annotation tool v2 only.
+This app allows you to upload only images without any annotations. 
 
-Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`, `.nrrd`(annotation tool v2 only). 
+By default, flags "normalize EXIF" and "remove alpha channel" are disabled.
+ - If images you import have EXIF rotation, or they look rotated in labeling interfaces please enable "normalize EXIF" flag in the modal window.
+ - If your images have alpha channel, enable "remove alpha channel" flag.
 
-🗄️ Starting from version `1.2.22` the application supports uploading the files from a single archive. To do so, change the context menu to the File.
+⚠️ Be aware that "remove files after successful import" flag is enabled by default, it will automatically remove source directory after import. 
 
-🔥 Starting from version `v1.2.0` application automatically compares image file extension with actual image mimetype and corrects extension if needed. For example: if you import image `my_image.png` but it is actually a TIFF then the image will be automatically renamed to `my_image.tiff`.
+Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`, `.nrrd`.
 
-🏋️ Starting from version `v1.2.7` application supports import from special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using drag-ang-drop mechanism:
+⚠️ Images in `.nrrd` format can be viewed in **Image annotation tool v2** only.
 
-1. Run agent on your computer where data is stored. Watch [how-to video](https://youtu.be/aO7Zc4kTrVg).
-2. Copy your data to special folder on your computer that was created by agent. Agent mounts this directory to your Supervisely instance and it becomes accessible in Team Files. Learn more [in documentation](https://docs.supervise.ly/customization/agents/agent-storage). Watch [how-to video](https://youtu.be/63Kc8Xq9H0U).
-3. Go to `Team Files` -> `Supervisely Agent` and find your folder there.
-4. Right click to open context menu and start app. Now app will upload data directly from your computer to the platform.
+#### Changelog
+🗄️ `1.2.22` Starting from this version application supports uploading the files from a single archive. To do so, change the context menu to the File.
+
+🏋️ `1.2.7` Starting from this version application supports import from special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using drag-ang-drop mechanism:
+  1. Run agent on your computer where data is stored. Watch [how-to video](https://youtu.be/aO7Zc4kTrVg).
+  2. Copy your data to special folder on your computer that was created by agent. Agent mounts this directory to your Supervisely instance, and it becomes accessible in Team Files. Learn more [in documentation](https://docs.supervise.ly/customization/agents/agent-storage). Watch [how-to video](https://youtu.be/63Kc8Xq9H0U).
+  3. Go to `Team Files` → `Supervisely Agent` and find your folder there.
+  4. Right click to open context menu and start app. Now app will upload data directly from your computer to the platform.
+
+🔥 `1.2.0` Starting from this version application automatically compares image file extension with actual image MIME type and corrects extension if needed. For example: if you import image `my_image.png`, but it is actually a TIFF then the image will be automatically renamed to `my_image.tiff`.
+
 
 #### Input files structure
 
-ℹ️ You can download the archive with data example [here](https://github.com/supervisely-ecosystem/import-images/files/12537000/my_images_project.zip).
+💡 You can download the archive with data example [here](https://github.com/supervisely-ecosystem/import-images/files/12537000/my_images_project.zip).
 
 **Team Files**
 
@@ -49,21 +54,21 @@ Subdirectories inside the root directory (the one that you run the app from or s
  
 ```
 .
-my_images_project
-├── img_01.jpeg
+📁my_images_project
+├── 🖼️img_01.jpeg
 ├── ...
-├── img_09.png
-├── my_folder1
-│   ├── img_01.JPG
-│   ├── img_02.jpeg
-│   └── my_folder2
-│       ├── img_13.jpeg
+├── 🖼️img_09.png
+├── 📁my_folder1
+│   ├── 🖼️img_01.JPG
+│   ├── 🖼️img_02.jpeg
+│   └── 📁my_folder2
+│       ├── 🖼️img_13.jpeg
 │       ├── ...
-│       └── img_9999.png
-└── my_folder3
-    ├── img_01.JPG
-    ├── img_02.jpeg
-    └── img_03.png
+│       └── 🖼️img_9999.png
+└── 📁my_folder3
+    ├── 🖼️img_01.JPG
+    ├── 🖼️img_02.jpeg
+    └── 🖼️img_03.png
 ```
 
 As a result we will get project with 3 datasets with the names: `ds0`, `my_folder1`, `my_folder3`. Dataset `my_folder1` will also contain images from `my_folder2` directory.
@@ -73,20 +78,20 @@ As a result we will get project with 3 datasets with the names: `ds0`, `my_folde
 Think of a drag & drop area as the root directory for your datasets that is empty for now. Drop multiple folders with images into the drag & drop area. Directories that you drop inside the drag and drop area are defined as datasets. If you drag & drop images without a folder, these images will be moved to the dataset with the name "`ds0`".
 
 ```
-├── img_01.jpeg
+├── 🖼️img_01.jpeg
 ├── ...
-├── img_09.png
-├── my_folder1
-│   ├── img_01.JPG
-│   ├── img_02.jpeg
-│   └── my_folder2
-│       ├── img_13.jpeg
+├── 🖼️img_09.png
+├── 📁my_folder1
+│   ├── 🖼️img_01.JPG
+│   ├── 🖼️img_02.jpeg
+│   └── 📁my_folder2
+│       ├── 🖼️img_13.jpeg
 │       ├── ...
-│       └── img_9999.png
-└── my_folder3
-    ├── img_01.JPG
-    ├── img_02.jpeg
-    └── img_03.png
+│       └── 🖼️img_9999.png
+└── 📁my_folder3
+    ├── 🖼️img_01.JPG
+    ├── 🖼️img_02.jpeg
+    └── 🖼️img_03.png
 ```
 
 As a result we will get project with 3 datasets with the names: `ds0`, `my_folder1`, `my_folder3`. Dataset `my_folder1` will also contain images from `my_folder2` directory.

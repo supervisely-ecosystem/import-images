@@ -167,6 +167,9 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
 
 def validate_mimetypes(images_names: list, images_paths: list) -> list:
     """Validate mimetypes for images."""
+    
+    mimetypes.add_type("image/webp", ".webp") # to extend types_map
+
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
         if g.NEED_DOWNLOAD:
