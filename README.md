@@ -35,7 +35,7 @@ Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo
 #### Changelog
 🗄️ `1.2.22` Starting from this version application supports uploading the files from a single archive. To do so, change the context menu to the File.
 
-🏋️ `1.2.7` Starting from version application supports import from special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using drag-ang-drop mechanism:
+🏋️ `1.2.7` Starting from this version application supports import from special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using drag-ang-drop mechanism:
   1. Run agent on your computer where data is stored. Watch [how-to video](https://youtu.be/aO7Zc4kTrVg).
   2. Copy your data to special folder on your computer that was created by agent. Agent mounts this directory to your Supervisely instance, and it becomes accessible in Team Files. Learn more [in documentation](https://docs.supervise.ly/customization/agents/agent-storage). Watch [how-to video](https://youtu.be/63Kc8Xq9H0U).
   3. Go to `Team Files` → `Supervisely Agent` and find your folder there.
