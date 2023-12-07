@@ -45,6 +45,8 @@ sly.logger.debug(
 
 INPUT_PATH = INPUT_FILES or INPUT_FOLDER or INPUT_FILE
 sly.logger.debug(f"App starting... INPUT_PATH: {INPUT_PATH}")
+if INPUT_PATH is None:
+    raise RuntimeError("No input data. Please specify input files or folder.")
 
 OUTPUT_PROJECT_NAME = os.environ.get("modal.state.project_name", "")
 
