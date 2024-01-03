@@ -96,7 +96,7 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
         full_path_file = file_info["path"]
         try:
             file_ext = get_file_ext(full_path_file)
-            if file_ext not in g.SUPPORTED_IMG_EXTS:
+            if file_ext not in sly.image.SUPPORTED_IMG_EXTS:
                 sly.image.validate_ext(full_path_file)
         except Exception as e:
             sly.logger.warn(

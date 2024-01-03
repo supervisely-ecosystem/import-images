@@ -1,8 +1,9 @@
 import os
+
 from dotenv import load_dotenv
+
 import supervisely as sly
 
-# for convenient debug, has no effect in production
 if sly.is_development():
     load_dotenv("local.env")
     load_dotenv(os.path.expanduser("~/supervisely.env"))
@@ -27,7 +28,7 @@ def import_images(api: sly.Api, task_id: int):
         )
         file_name = dir_info[0].get("name")
         file_ext = sly.fs.get_file_ext(file_name)
-        if file_ext in g.SUPPORTED_IMG_EXTS:
+        if file_ext in sly.image.SUPPORTED_IMG_EXTS:
             sly.logger.debug(f"File {file_name} is an image.")
         else:
             sly.logger.debug(
@@ -122,7 +123,8 @@ def import_images(api: sly.Api, task_id: int):
     api.task.set_output_project(task_id=task_id, project_id=project.id, project_name=project.name)
 
 
-if __name__ == "__main__":
+@sly.handle_exceptions(has_ui=False)
+def main():
     sly.logger.info(
         "Script arguments",
         extra={
@@ -132,8 +134,14 @@ if __name__ == "__main__":
         },
     )
 
-    import_images(g.api, g.TASK_ID)
     try:
+        import_images(g.api, g.TASK_ID)
         sly.app.fastapi.shutdown()
-    except KeyboardInterrupt:
-        sly.logger.info("Application shutdown successfully")
+    finally:
+        if not sly.is_development():
+            sly.logger.info(f"Remove data directory: {g.STORAGE_DIR}")
+            sly.fs.remove_dir(g.STORAGE_DIR)
+
+
+if __name__ == "__main__":
+    sly.main_wrapper("main", main)
