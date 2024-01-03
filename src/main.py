@@ -13,26 +13,25 @@ import functions as f
 import globals as g
 
 
-@g.my_app.callback("import_images")
 @sly.timeit
-def import_images(api: sly.Api, task_id, context, state, app_logger):
+def import_images(api: sly.Api, task_id: int):
     dir_info = api.file.list(g.TEAM_ID, g.INPUT_PATH)
     if len(dir_info) == 0:
         raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
 
-    app_logger.debug(f"Number of files in selected directory: {len(dir_info)}")
+    sly.logger.debug(f"Number of files in selected directory: {len(dir_info)}")
 
     if len(dir_info) == 1:
-        app_logger.debug(
+        sly.logger.debug(
             f"There is only one file in directory {g.INPUT_PATH}. "
             "Will check if it is an archive or an image."
         )
         file_name = dir_info[0].get("name")
         file_ext = sly.fs.get_file_ext(file_name)
         if file_ext in sly.image.SUPPORTED_IMG_EXTS:
-            app_logger.debug(f"File {file_name} is an image.")
+            sly.logger.debug(f"File {file_name} is an image.")
         else:
-            app_logger.debug(
+            sly.logger.debug(
                 f"File {file_name} is not an image, will try to handle it as an archive."
             )
             dir_info = f.unpack_archive_on_team_files(api, dir_info[0].get("path"))
@@ -44,7 +43,7 @@ def import_images(api: sly.Api, task_id, context, state, app_logger):
             else g.OUTPUT_PROJECT_NAME
         )
 
-        app_logger.info(f"Project name: {project_name}")
+        sly.logger.debug(f"Project name: {project_name}")
 
         project = api.project.create(
             workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
@@ -53,7 +52,7 @@ def import_images(api: sly.Api, task_id, context, state, app_logger):
         project = api.project.get_info_by_id(g.PROJECT_ID)
 
     if g.NEED_DOWNLOAD:
-        app_logger.info(f"Data will be downloaded: {g.INPUT_PATH}")
+        sly.logger.info(f"Data will be downloaded: {g.INPUT_PATH}")
         f.download_project(api, g.INPUT_PATH)
 
     dataset_info = None
@@ -63,8 +62,8 @@ def import_images(api: sly.Api, task_id, context, state, app_logger):
     else:
         datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, None)
 
-    app_logger.info(f"Datasets names: {datasets_names}")
-    app_logger.info(f"Datasets images map: {datasets_images_map}")
+    sly.logger.debug(f"Datasets names: {datasets_names}")
+    sly.logger.debug(f"Datasets images map: {datasets_images_map}")
 
     for dataset_name in datasets_names:
         if g.DATASET_ID is None:
@@ -110,7 +109,7 @@ def import_images(api: sly.Api, task_id, context, state, app_logger):
                         hashes=batch_hashes,
                     )
                 except Exception as e:
-                    app_logger.warn(msg=e)
+                    sly.logger.warn(msg=e)
 
             progress.iters_done_report(len(batch_names))
 
@@ -119,12 +118,12 @@ def import_images(api: sly.Api, task_id, context, state, app_logger):
     if g.REMOVE_SOURCE and not g.IS_ON_AGENT:
         api.file.remove(team_id=g.TEAM_ID, path=g.INPUT_PATH)
         source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
-        app_logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
+        sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
 
     api.task.set_output_project(task_id=task_id, project_id=project.id, project_name=project.name)
-    g.my_app.stop()
 
 
+@sly.handle_exceptions(has_ui=False)
 def main():
     sly.logger.info(
         "Script arguments",
@@ -136,7 +135,8 @@ def main():
     )
 
     try:
-        g.my_app.run(initial_events=[{"command": "import_images"}])
+        import_images(g.api, g.TASK_ID)
+        sly.app.fastapi.shutdown()
     finally:
         if not sly.is_development():
             sly.logger.info(f"Remove data directory: {g.STORAGE_DIR}")
@@ -144,4 +144,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sly.main_wrapper("main", main, log_for_agent=False)
+    sly.main_wrapper("main", main)

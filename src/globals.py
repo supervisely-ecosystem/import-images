@@ -3,8 +3,10 @@ import sys
 from distutils.util import strtobool
 
 from dotenv import load_dotenv
+from fastapi import FastAPI
 
 import supervisely as sly
+from supervisely.app.fastapi import create
 
 app_root_directory = os.path.dirname(os.getcwd())
 sys.path.append(app_root_directory)
@@ -16,8 +18,12 @@ if sly.is_development():
     load_dotenv(os.path.join(app_root_directory, "local.env"))
     load_dotenv(os.path.expanduser("~/supervisely.env"))
 
-my_app = sly.AppService()
-api = my_app.public_api
+app = FastAPI()
+
+sly_app = create()
+
+api = sly.Api.from_env()
+
 
 TASK_ID = sly.env.task_id()
 TEAM_ID = sly.env.team_id()
@@ -52,4 +58,4 @@ sly.logger.info(f"App starting... NEED_DOWNLOAD: {NEED_DOWNLOAD}.")
 
 REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source", "False")))
 
-STORAGE_DIR = my_app.data_dir
+STORAGE_DIR = sly.app.get_data_dir()
