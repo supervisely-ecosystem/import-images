@@ -29,7 +29,7 @@ def import_images(api: sly.Api, task_id, context, state, app_logger):
         )
         file_name = dir_info[0].get("name")
         file_ext = sly.fs.get_file_ext(file_name)
-        if file_ext in g.SUPPORTED_IMG_EXTS:
+        if file_ext in sly.image.SUPPORTED_IMG_EXTS:
             app_logger.debug(f"File {file_name} is an image.")
         else:
             app_logger.debug(
