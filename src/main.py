@@ -16,8 +16,6 @@ import globals as g
 @sly.timeit
 def import_images(api: sly.Api, task_id: int):
     dir_info = api.file.list(g.TEAM_ID, g.INPUT_PATH)
-    # ! only for debug
-    api.file.get_info_by_path(g.TEAM_ID, g.INPUT_PATH).abc
     if len(dir_info) == 0:
         raise Exception(f"There are no files in selected directory: '{g.INPUT_PATH}'")
 
