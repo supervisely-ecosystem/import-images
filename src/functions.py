@@ -76,13 +76,14 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     for name, path in zip(names, paths):
         try:
             file_ext = get_file_ext(path).lower()
-            if sly.fs.file_exists(path):
-                new_path = os.path.splitext(path)[0]
-                if sly.fs.file_exists(new_path):
-                    path = new_path
             if file_ext != ".mpo" and (g.REMOVE_ALPHA_CHANNEL or g.NORMALIZE_EXIF):
-                img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
-                sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
+                try:
+                    img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
+                    sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
+                except:
+                    path = os.path.splitext(path)[0]
+                    img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
+                    sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
             res_batch_names.append(name)
             res_batch_paths.append(path)
         except Exception as e:
