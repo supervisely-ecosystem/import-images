@@ -107,9 +107,7 @@ def import_images(api: sly.Api, task_id: int):
             else:
                 try:
                     batch_names = f.validate_mimetypes(batch_names, batch_paths)
-                    res_batch_names = f.check_names_uniqueness(
-                        api, dataset_info.id, res_batch_names
-                    )
+                    batch_names = f.check_names_uniqueness(api, dataset_info.id, batch_names)
                     api.image.upload_hashes(
                         dataset_id=dataset_info.id,
                         names=batch_names,
