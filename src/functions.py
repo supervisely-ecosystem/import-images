@@ -76,6 +76,8 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     for name, path in zip(names, paths):
         try:
             file_ext = get_file_ext(path).lower()
+            if file_ext == "":
+                name = get_file_name(path)
             if file_ext != ".mpo" and (g.REMOVE_ALPHA_CHANNEL or g.NORMALIZE_EXIF):
                 try:
                     img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
