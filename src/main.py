@@ -38,7 +38,7 @@ def import_images(api: sly.Api, task_id: int):
 
     if g.PROJECT_ID is None:
         project_name = (
-            f.get_project_name_from_input_path(g.CHECKED_INPUT_PATH)
+            f.get_project_name_from_input_path(g.INPUT_PATH)
             if len(g.OUTPUT_PROJECT_NAME) == 0
             else g.OUTPUT_PROJECT_NAME
         )
