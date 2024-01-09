@@ -63,6 +63,7 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
     sly.logger.debug(f"Unpacked files uploaded to {upload_path}")
 
     dir_info = api.file.list(g.TEAM_ID, upload_path)
+    g.CHECKED_INPUT_PATH = upload_path
 
     return dir_info
 
@@ -167,8 +168,8 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
 
 def validate_mimetypes(images_names: list, images_paths: list) -> list:
     """Validate mimetypes for images."""
-    
-    mimetypes.add_type("image/webp", ".webp") # to extend types_map
+
+    mimetypes.add_type("image/webp", ".webp")  # to extend types_map
 
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
@@ -189,3 +190,18 @@ def validate_mimetypes(images_names: list, images_paths: list) -> list:
         )
 
     return images_names
+
+
+def check_names_uniqueness(api: sly.Api, dataset_id, batch_names) -> list:
+    """Check names uniqueness."""
+    existing_images = api.image.get_list(dataset_id)
+    existing_names = [image_info.name for image_info in existing_images]
+
+    for idx, name in enumerate(batch_names):
+        if name in existing_names:
+            new_name = api.image.get_free_name(dataset_id, name)
+            batch_names[idx] = new_name
+            sly.logger.warn(
+                f"Name {name} already exists in dataset {dataset_id}: renamed to {new_name}"
+            )
+    return batch_names
