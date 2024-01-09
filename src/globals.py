@@ -59,3 +59,5 @@ sly.logger.info(f"App starting... NEED_DOWNLOAD: {NEED_DOWNLOAD}.")
 REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source", "False")))
 
 STORAGE_DIR = sly.app.get_data_dir()
+sly.logger.debug(f"Storage directory: {STORAGE_DIR}")
+sly.logger.debug(f"List of files in storage directory: {os.listdir(STORAGE_DIR)}")
