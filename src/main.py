@@ -38,7 +38,7 @@ def import_images(api: sly.Api, task_id: int):
 
     if g.PROJECT_ID is None:
         project_name = (
-            f.get_project_name_from_input_path(g.INPUT_PATH)
+            f.get_project_name_from_input_path(g.CHECKED_INPUT_PATH)
             if len(g.OUTPUT_PROJECT_NAME) == 0
             else g.OUTPUT_PROJECT_NAME
         )
@@ -52,8 +52,8 @@ def import_images(api: sly.Api, task_id: int):
         project = api.project.get_info_by_id(g.PROJECT_ID)
 
     if g.NEED_DOWNLOAD:
-        sly.logger.info(f"Data will be downloaded: {g.INPUT_PATH}")
-        f.download_project(api, g.INPUT_PATH)
+        sly.logger.info(f"Data will be downloaded: {g.CHECKED_INPUT_PATH}")
+        f.download_project(api, g.CHECKED_INPUT_PATH)
 
     dataset_info = None
     if g.DATASET_ID is not None:
@@ -89,20 +89,27 @@ def import_images(api: sly.Api, task_id: int):
             sly.batched(seq=images_hashes, batch_size=10),
         ):
             if g.NEED_DOWNLOAD:
-                res_batch_names, res_batch_paths = f.normalize_exif_and_remove_alpha_channel(
-                    names=batch_names, paths=batch_paths
-                )
-
-                res_batch_names = f.validate_mimetypes(res_batch_names, res_batch_paths)
-
-                api.image.upload_paths(
-                    dataset_id=dataset_info.id,
-                    names=res_batch_names,
-                    paths=res_batch_paths,
-                )
+                try:
+                    res_batch_names, res_batch_paths = f.normalize_exif_and_remove_alpha_channel(
+                        names=batch_names, paths=batch_paths
+                    )
+                    res_batch_names = f.validate_mimetypes(res_batch_names, res_batch_paths)
+                    res_batch_names = f.check_names_uniqueness(
+                        api, dataset_info.id, res_batch_names
+                    )
+                    api.image.upload_paths(
+                        dataset_id=dataset_info.id,
+                        names=res_batch_names,
+                        paths=res_batch_paths,
+                    )
+                except Exception as e:
+                    sly.logger.warn(msg=e)
             else:
                 try:
                     batch_names = f.validate_mimetypes(batch_names, batch_paths)
+                    res_batch_names = f.check_names_uniqueness(
+                        api, dataset_info.id, res_batch_names
+                    )
                     api.image.upload_hashes(
                         dataset_id=dataset_info.id,
                         names=batch_names,
@@ -119,6 +126,10 @@ def import_images(api: sly.Api, task_id: int):
         api.file.remove(team_id=g.TEAM_ID, path=g.INPUT_PATH)
         source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
         sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
+        if g.CHECKED_INPUT_PATH != g.INPUT_PATH:
+            api.file.remove(team_id=g.TEAM_ID, path=g.CHECKED_INPUT_PATH)
+            temp_dir_name = g.CHECKED_INPUT_PATH.lstrip("/").rstrip("/")
+            sly.logger.info(msg=f"Temp directory: '{temp_dir_name}' was successfully removed.")
 
     api.task.set_output_project(task_id=task_id, project_id=project.id, project_name=project.name)
 
