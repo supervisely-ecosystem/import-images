@@ -89,10 +89,11 @@ def import_images(api: sly.Api, task_id: int):
             sly.batched(seq=images_hashes, batch_size=10),
         ):
             if g.NEED_DOWNLOAD:
-                res_batch_names = f.validate_mimetypes(batch_names, batch_paths)
                 res_batch_names, res_batch_paths = f.normalize_exif_and_remove_alpha_channel(
-                    names=res_batch_names, paths=batch_paths
+                    names=batch_names, paths=batch_paths
                 )
+
+                res_batch_names = f.validate_mimetypes(res_batch_names, res_batch_paths)
 
                 try:
                     api.image.upload_paths(
