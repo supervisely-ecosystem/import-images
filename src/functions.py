@@ -84,7 +84,7 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
             res_batch_paths.append(path)
         except Exception as e:
             sly.logger.warning(
-                "Skip image {!r}: {}".format(name, str(e)), extra={"file_path": path}
+                f"Skip image {name}: {str(e)}", extra={"file_path": path}
             )
     return res_batch_names, res_batch_paths
 
