@@ -1,14 +1,13 @@
 import mimetypes
 import os
 import pathlib
-
 from typing import List
 
 import magic
-import supervisely as sly
-from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ext
 
 import globals as g
+import supervisely as sly
+from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ext
 
 
 def get_project_name_from_input_path(input_path: str) -> str:
@@ -77,15 +76,17 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     for name, path in zip(names, paths):
         try:
             file_ext = get_file_ext(path).lower()
+            if sly.fs.file_exists(path):
+                new_path = os.path.splitext(path)[0]
+                if sly.fs.file_exists(new_path):
+                    path = new_path
             if file_ext != ".mpo" and (g.REMOVE_ALPHA_CHANNEL or g.NORMALIZE_EXIF):
                 img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
                 sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
             res_batch_names.append(name)
             res_batch_paths.append(path)
         except Exception as e:
-            sly.logger.warning(
-                f"Skip image {name}: {str(e)}", extra={"file_path": path}
-            )
+            sly.logger.warning(f"Skip image {name}: {str(e)}", extra={"file_path": path})
     return res_batch_names, res_batch_paths
 
 
@@ -167,12 +168,17 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
 
 def validate_mimetypes(images_names: list, images_paths: list) -> list:
     """Validate mimetypes for images."""
-    
-    mimetypes.add_type("image/webp", ".webp") # to extend types_map
+
+    mimetypes.add_type("image/webp", ".webp")  # to extend types_map
 
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
         if g.NEED_DOWNLOAD:
+            if not sly.fs.file_exists(image_path):
+                temp_path = os.path.splitext(image_path)[0]
+                if sly.fs.file_exists(temp_path):
+                    image_path = temp_path
+                    image_name = get_file_name(image_path)
             mimetype = mime.from_file(image_path)
         else:
             file_info = g.api.file.get_info_by_path(team_id=g.TEAM_ID, remote_path=image_path)
