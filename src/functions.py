@@ -60,6 +60,10 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
         raise RuntimeError(
             f"Provided file is not an archive: {filename} or it is corrupted: {str(e)}"
         )
+    filter_fn = lambda x: sly.fs.get_file_ext(x).lower() in g.EXT_TO_CONVERT
+    files_to_convert = sly.fs.list_files_recursively(unpacked_path, filter_fn=filter_fn)
+    if len(files_to_convert) > 0:
+        g.NEED_DOWNLOAD = True
     sly.logger.debug(f"Archive {download_path} unpacked to {unpacked_path}")
 
     upload_path = f"/import-images/temp/{sly.fs.get_file_name(archive_path)}"
