@@ -1,1 +1,3 @@
 supervisely==6.73.2
+pillow-avif-plugin
+pillow_heif
