@@ -43,6 +43,10 @@ Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo
 
 🔥 `1.2.0` Starting from this version application automatically compares image file extension with actual image MIME type and corrects extension if needed. For example: if you import image `my_image.png`, but it is actually a TIFF then the image will be automatically renamed to `my_image.tiff`.
 
+🖼️ `1.2.29` Starting from this version added support for `.jfif` format.
+
+✅ `1.2.31` Starting from this version added support for `.avif` and `.heic` formats. Additionally, fixed case sensitivity issues for file extensions.
+
 
 #### Input files structure
 
