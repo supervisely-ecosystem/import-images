@@ -4,10 +4,17 @@ import pathlib
 from typing import List
 
 import magic
+
+# * do not remove folllowing imports, it is used to register avif/heic formats
+import pillow_avif  # noqa
+from PIL import Image
+from pillow_heif import register_heif_opener
+
+import globals as g
 import supervisely as sly
 from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ext
 
-import globals as g
+register_heif_opener()
 
 
 def get_project_name_from_input_path(input_path: str) -> str:
@@ -77,6 +84,10 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     for name, path in zip(names, paths):
         try:
             file_ext = get_file_ext(path).lower()
+            if file_ext in g.EXT_TO_CONVERT:
+                path, name = convert_to_jpg(path)
+                if path is None:
+                    continue
             if file_ext != ".mpo" and (g.REMOVE_ALPHA_CHANNEL or g.NORMALIZE_EXIF):
                 img = sly.image.read(path, g.REMOVE_ALPHA_CHANNEL)
                 sly.image.write(path, img, g.REMOVE_ALPHA_CHANNEL)
@@ -96,7 +107,7 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
         full_path_file = file_info["path"]
         try:
             file_ext = get_file_ext(full_path_file)
-            if file_ext not in sly.image.SUPPORTED_IMG_EXTS:
+            if file_ext.lower() not in g.SUPPORTED_EXTS:
                 sly.image.validate_ext(full_path_file)
         except Exception as e:
             sly.logger.warn(
@@ -107,6 +118,9 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
             continue
 
         file_name = get_file_name_with_ext(full_path_file)
+        file_ext = get_file_ext(full_path_file)
+        if file_ext.lower() in g.EXT_TO_CONVERT:
+            g.NEED_DOWNLOAD = True
         file_hash = file_info["hash"]
         if dataset_name is not None:
             ds_name = dataset_name
@@ -205,3 +219,18 @@ def check_names_uniqueness(api: sly.Api, dataset_id, batch_names) -> list:
                 f"Name {name} already exists in dataset {dataset_id}: renamed to {new_name}"
             )
     return batch_names
+
+
+def convert_to_jpg(path) -> tuple:
+    """Convert image to jpg."""
+    name = get_file_name(path)
+    new_name = f"{name}.jpeg"
+    dirname = os.path.dirname(path)
+    new_path = os.path.join(dirname, new_name)
+    try:
+        with Image.open(path) as image:
+            image.convert("RGB").save(new_path)
+        sly.fs.silent_remove(path)
+        return new_path, new_name
+    except Exception as e:
+        sly.logger.warn(f"Skip image {name}: {repr(e)}", extra={"file_path": path})

@@ -1,7 +1,8 @@
 import os
 
-import supervisely as sly
 from dotenv import load_dotenv
+
+import supervisely as sly
 
 if sly.is_development():
     load_dotenv("local.env")
@@ -29,6 +30,12 @@ def import_images(api: sly.Api, task_id: int):
         file_ext = sly.fs.get_file_ext(file_name)
         if file_ext.lower() in sly.image.SUPPORTED_IMG_EXTS:
             sly.logger.debug(f"File {file_name} is an image.")
+        elif file_ext.lower() in g.EXT_TO_CONVERT:
+            sly.logger.debug(
+                f"File {file_name} is an image, but it is not supported. "
+                "Will try to convert it to jpeg."
+            )
+            g.NEED_DOWNLOAD = True
         else:
             sly.logger.debug(
                 f"File {file_name} is not an image, will try to handle it as an archive."

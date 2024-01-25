@@ -60,3 +60,6 @@ sly.logger.info(f"App starting... NEED_DOWNLOAD: {NEED_DOWNLOAD}.")
 REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source", "False")))
 
 STORAGE_DIR = sly.app.get_data_dir()
+
+EXT_TO_CONVERT = [".heic", ".avif"]
+SUPPORTED_EXTS = [*sly.image.SUPPORTED_IMG_EXTS, *EXT_TO_CONVERT]
