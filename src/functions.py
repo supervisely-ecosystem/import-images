@@ -25,17 +25,19 @@ def get_project_name_from_input_path(input_path: str) -> str:
 
 def download_project(api: sly.Api, input_path):
     """Download target directory from Team Files if NEED_DOWNLOAD is True."""
-    remote_proj_dir = input_path
+    remote_path = input_path.lstrip("/")
     if api.file.is_on_agent(input_path):
-        agent_id, path_on_agent = api.file.parse_agent_id_and_path(input_path)
-        local_save_dir = f"{g.STORAGE_DIR}{path_on_agent}/"
+        agent_id, remote_path = api.file.parse_agent_id_and_path(input_path)
+    
+    if api.file.exists(g.TEAM_ID, input_path):
+        local_save_path = os.path.join(g.STORAGE_DIR, remote_path)
+        api.file.download(g.TEAM_ID, input_path, local_save_path)
     else:
-        local_save_dir = f"{g.STORAGE_DIR}{remote_proj_dir}/"
-    local_save_dir = local_save_dir.replace("//", "/")
-    api.file.download_directory(
-        g.TEAM_ID, remote_path=remote_proj_dir, local_save_path=local_save_dir
-    )
-    return local_save_dir
+        local_save_path = os.path.join(g.STORAGE_DIR, remote_path)
+        if not local_save_path.endswith("/"):
+            local_save_path += "/"
+        api.file.download_directory(g.TEAM_ID, input_path, local_save_path)
+    return local_save_path
 
 
 def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.file_api.FileInfo]:
