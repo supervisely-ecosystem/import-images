@@ -1,0 +1,2 @@
+pillow-avif-plugin
+pillow_heif
