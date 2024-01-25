@@ -41,6 +41,19 @@ def import_images(api: sly.Api, task_id: int):
                 f"File {file_name} is not an image, will try to handle it as an archive."
             )
             dir_info = f.unpack_archive_on_team_files(api, dir_info[0].get("path"))
+    elif len(dir_info) > 1:
+        for file_info in dir_info:
+            meta = file_info.get("meta")
+            if meta is None:
+                continue
+            ext = "." + meta.get("ext")
+            if ext and ext in g.EXT_TO_CONVERT:
+                sly.logger.debug(
+                    f"Found file with unsupported extension"
+                    "Will try to convert it to jpeg."
+                )
+                g.NEED_DOWNLOAD = True
+                break
 
     if g.PROJECT_ID is None:
         project_name = (
