@@ -49,7 +49,7 @@ def import_images(api: sly.Api, task_id: int):
             ext = "." + meta.get("ext")
             if ext and ext in g.EXT_TO_CONVERT:
                 sly.logger.debug(
-                    f"Found file with unsupported extension"
+                    f"Found file with unsupported extension. "
                     "Will try to convert it to jpeg."
                 )
                 g.NEED_DOWNLOAD = True
