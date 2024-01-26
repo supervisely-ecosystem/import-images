@@ -28,7 +28,7 @@ def download_project(api: sly.Api, input_path):
     remote_path = input_path.lstrip("/")
     if api.file.is_on_agent(input_path):
         agent_id, remote_path = api.file.parse_agent_id_and_path(input_path)
-    
+
     if api.file.exists(g.TEAM_ID, input_path):
         local_save_path = os.path.join(g.STORAGE_DIR, remote_path)
         api.file.download(g.TEAM_ID, input_path, local_save_path)
@@ -53,13 +53,13 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
 
     unpacked_path = os.path.join(unpacked_dir, sly.fs.get_file_name(archive_path))
     sly.fs.mkdir(unpacked_path)
+    filename = sly.fs.get_file_name_with_ext(download_path)
+    if not sly.fs.is_archive(download_path):
+        raise RuntimeError(f"Provided file is not an archive: {filename}")
     try:
         sly.fs.unpack_archive(download_path, unpacked_path)
     except Exception as e:
-        filename = sly.fs.get_file_name_with_ext(download_path)
-        raise RuntimeError(
-            f"Provided file is not an archive: {filename} or it is corrupted: {str(e)}"
-        )
+        raise RuntimeError(f"Failed to unpack archive {filename}: {repr(e)}")
     filter_fn = lambda x: sly.fs.get_file_ext(x).lower() in g.EXT_TO_CONVERT
     files_to_convert = sly.fs.list_files_recursively(unpacked_path, filter_fn=filter_fn)
     if len(files_to_convert) > 0:
