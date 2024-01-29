@@ -40,10 +40,19 @@ def download_project(api: sly.Api, input_path):
     return local_save_path
 
 
+def validate_file_without_ext(file_path: str) -> bool:
+    try:
+        pil_img = Image.open(file_path)
+        pil_img.load()  # Validate image data. Because 'open' is lazy method.
+        return True
+    except Exception as e:
+        return False
+
+
 def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.file_api.FileInfo]:
     sly.logger.debug(f"Unpacking archive {archive_path} on Team Files")
     archives_dir = os.path.join(g.STORAGE_DIR, "archives")
-    unpacked_dir = os.path.join(g.STORAGE_DIR, "unpacked")
+    unpacked_dir = os.path.join(g.STORAGE_DIR, "images_project")
     sly.fs.mkdir(archives_dir)
     sly.logger.debug(f"Path to the archives: {archives_dir}, to unpacked files: {unpacked_dir}")
 
@@ -54,12 +63,21 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
     unpacked_path = os.path.join(unpacked_dir, sly.fs.get_file_name(archive_path))
     sly.fs.mkdir(unpacked_path)
     filename = sly.fs.get_file_name_with_ext(download_path)
-    if not sly.fs.is_archive(download_path):
+    if sly.fs.is_archive(download_path):
+        try:
+            sly.fs.unpack_archive(download_path, unpacked_path)
+        except Exception as e:
+            raise RuntimeError(f"Failed to unpack archive {filename}: {repr(e)}")
+    elif validate_file_without_ext(download_path):
+        try:
+            file_name = get_file_name(download_path)
+            sly.logger.debug(f"File {file_name} has no extension, but it is an image.")
+            file_name = validate_mimetypes([file_name], [download_path], is_local=True)[0]
+            sly.fs.copy_file(download_path, os.path.join(unpacked_path, file_name))
+        except Exception as e:
+            raise RuntimeError(f"Failed to process file {filename}: {repr(e)}") from e
+    else:
         raise RuntimeError(f"Provided file is not an archive: {filename}")
-    try:
-        sly.fs.unpack_archive(download_path, unpacked_path)
-    except Exception as e:
-        raise RuntimeError(f"Failed to unpack archive {filename}: {repr(e)}")
     filter_fn = lambda x: sly.fs.get_file_ext(x).lower() in g.EXT_TO_CONVERT
     files_to_convert = sly.fs.list_files_recursively(unpacked_path, filter_fn=filter_fn)
     if len(files_to_convert) > 0:
@@ -185,7 +203,7 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
     return ds_name
 
 
-def validate_mimetypes(images_names: list, images_paths: list) -> list:
+def validate_mimetypes(images_names: list, images_paths: list, is_local: bool = False) -> list:
     """Validate mimetypes for images."""
 
     mimetypes.add_type("image/webp", ".webp")  # to extend types_map
@@ -193,7 +211,7 @@ def validate_mimetypes(images_names: list, images_paths: list) -> list:
 
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
-        if g.NEED_DOWNLOAD:
+        if g.NEED_DOWNLOAD or is_local:
             mimetype = mime.from_file(image_path)
         else:
             file_info = g.api.file.get_info_by_path(team_id=g.TEAM_ID, remote_path=image_path)
