@@ -72,7 +72,7 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
         try:
             file_name = get_file_name(download_path)
             sly.logger.debug(f"File {file_name} has no extension, but it is an image.")
-            file_name = validate_mimetypes([file_name], [download_path])[0]
+            file_name = validate_mimetypes([file_name], [download_path], is_local=True)[0]
             sly.fs.copy_file(download_path, os.path.join(unpacked_path, file_name))
         except Exception as e:
             raise RuntimeError(f"Failed to process file {filename}: {repr(e)}") from e
@@ -203,7 +203,7 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
     return ds_name
 
 
-def validate_mimetypes(images_names: list, images_paths: list) -> list:
+def validate_mimetypes(images_names: list, images_paths: list, is_local: bool = False) -> list:
     """Validate mimetypes for images."""
 
     mimetypes.add_type("image/webp", ".webp")  # to extend types_map
@@ -211,7 +211,7 @@ def validate_mimetypes(images_names: list, images_paths: list) -> list:
 
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
-        if g.NEED_DOWNLOAD:
+        if g.NEED_DOWNLOAD or is_local:
             mimetype = mime.from_file(image_path)
         else:
             file_info = g.api.file.get_info_by_path(team_id=g.TEAM_ID, remote_path=image_path)
