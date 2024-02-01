@@ -63,6 +63,7 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
     unpacked_path = os.path.join(unpacked_dir, sly.fs.get_file_name(archive_path))
     sly.fs.mkdir(unpacked_path)
     filename = sly.fs.get_file_name_with_ext(download_path)
+    ext = sly.fs.get_file_ext(filename).lower()
     if sly.fs.is_archive(download_path):
         try:
             sly.fs.unpack_archive(download_path, unpacked_path)
@@ -76,6 +77,8 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
             sly.fs.copy_file(download_path, os.path.join(unpacked_path, file_name))
         except Exception as e:
             raise RuntimeError(f"Failed to process file {filename}: {repr(e)}") from e
+    elif ext == ".pdf":
+        raise RuntimeError(f"Use 'Import PDF as Images' app to import PDF files")
     else:
         raise RuntimeError(f"Provided file is not an archive: {filename}")
     filter_fn = lambda x: sly.fs.get_file_ext(x).lower() in g.EXT_TO_CONVERT
@@ -221,6 +224,8 @@ def validate_mimetypes(images_names: list, images_paths: list, is_local: bool = 
             continue
 
         new_img_ext = mimetypes.guess_extension(mimetype)
+        if new_img_ext == ".pdf":
+            raise RuntimeError(f"Use 'Import PDF as Images' app to import PDF files")
         new_img_name = f"{get_file_name(image_name)}{new_img_ext}"
         images_names[idx] = new_img_name
         sly.logger.warn(
