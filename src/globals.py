@@ -61,5 +61,5 @@ REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source", "False")))
 
 STORAGE_DIR = sly.app.get_data_dir()
 
-EXT_TO_CONVERT = [".heic", ".avif"]
+EXT_TO_CONVERT = [".heic", ".avif", ".jp2"]
 SUPPORTED_EXTS = [*sly.image.SUPPORTED_IMG_EXTS, *EXT_TO_CONVERT]
