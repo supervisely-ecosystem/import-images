@@ -28,25 +28,29 @@ By default, flags "normalize EXIF" and "remove alpha channel" are disabled.
 
 ⚠️ Be aware that "remove files after successful import" flag is enabled by default, it will automatically remove source directory after import. 
 
-Supported images formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`, `.nrrd`.
+Supported image formats: `.jpg`, `.jpeg`, `jpe`, `.bmp`, `.png`, `.webp`, `.mpo`, `.tiff`, `.nrrd`, `.jfif`, `.avif`, `.heic`.
+
+Single image file size limits:
+- 📚 `Community` plan: **25MB**
+- 🏢 `Pro` plan: **300MB**
+- 🚀 `Enterprise` edition: **no limits**
 
 ⚠️ Images in `.nrrd` format can be viewed in **Image annotation tool v2** only.
 
 #### Changelog
-🗄️ `1.2.22` Starting from this version application supports uploading the files from a single archive. To do so, change the context menu to the File.
+🗄️ `1.2.22` Starting from this version application supports uploading files from a single archive. To do so, change the context menu to the File.
 
-🏋️ `1.2.7` Starting from this version application supports import from special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using drag-ang-drop mechanism:
-  1. Run agent on your computer where data is stored. Watch [how-to video](https://youtu.be/aO7Zc4kTrVg).
-  2. Copy your data to special folder on your computer that was created by agent. Agent mounts this directory to your Supervisely instance, and it becomes accessible in Team Files. Learn more [in documentation](https://docs.supervise.ly/customization/agents/agent-storage). Watch [how-to video](https://youtu.be/63Kc8Xq9H0U).
+🏋️ `1.2.7` Starting from this version application supports import from the special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using a drag-and-drop mechanism:
+  1. Run an agent on your computer where data is stored. Watch [how-to video](https://youtu.be/aO7Zc4kTrVg).
+  2. Copy your data to the special folder on your computer that was created by the agent. Agent mounts this directory to your Supervisely instance, and it becomes accessible in Team Files. Learn more [in documentation](https://docs.supervise.ly/customization/agents/agent-storage). Watch [how-to video](https://youtu.be/63Kc8Xq9H0U).
   3. Go to `Team Files` → `Supervisely Agent` and find your folder there.
-  4. Right click to open context menu and start app. Now app will upload data directly from your computer to the platform.
+  4. Open the context menu and start the app. Now app will upload data directly from your computer to the platform.
 
 🔥 `1.2.0` Starting from this version application automatically compares image file extension with actual image MIME type and corrects extension if needed. For example: if you import image `my_image.png`, but it is actually a TIFF then the image will be automatically renamed to `my_image.tiff`.
 
 🖼️ `1.2.29` Starting from this version added support for `.jfif` format.
 
-✅ `1.2.31` Starting from this version added support for `.avif` and `.heic` formats. Additionally, fixed case sensitivity issues for file extensions.
-
+🖼️ `1.2.31` Starting from this version you can upload `.avif` and `.heic` formats (will be converted to `.jpg`). Additionally, fixed case sensitivity issues for file extensions.
 
 #### Input files structure
 
@@ -75,11 +79,11 @@ Subdirectories inside the root directory (the one that you run the app from or s
     └── 🖼️img_03.png
 ```
 
-As a result we will get project with 3 datasets with the names: `ds0`, `my_folder1`, `my_folder3`. Dataset `my_folder1` will also contain images from `my_folder2` directory.
+As a result, we will get a project with 3 datasets with the names: `ds0`, `my_folder1`, and `my_folder3`. Dataset `my_folder1` will also contain images from `my_folder2` directory.
 
 **Drag & Drop**
 
-Think of a drag & drop area as the root directory for your datasets that is empty for now. Drop multiple folders with images into the drag & drop area. Directories that you drop inside the drag and drop area are defined as datasets. If you drag & drop images without a folder, these images will be moved to the dataset with the name "`ds0`".
+Think of a drag-and-drop area as the root directory for your datasets that is empty for now. Drop multiple folders with images into the drag & drop area. Directories that you drop inside the drag-and-drop area are defined as datasets. If you drag & drop images without a folder, these images will be moved to the dataset with the name "`ds0`".
 
 ```
 ├── 🖼️img_01.jpeg
@@ -103,7 +107,7 @@ As a result we will get project with 3 datasets with the names: `ds0`, `my_folde
 
 # How to Run
 
-App can be launched from ecosystem, team files, images project and images dataset
+The app can be launched from the ecosystem, team files, images project and images dataset
 * [running the app from ecosystem](#run-from-ecosystem) you will be given options to create new project, upload images to existing project or existing dataset
 * [running the app from team files](#run-from-team-files) will result in new project
 * [running the app from images project](#run-from-images-project) will upload images to existing project, from which it was launched
