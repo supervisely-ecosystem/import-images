@@ -79,6 +79,11 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
             raise RuntimeError(f"Failed to process file {filename}: {repr(e)}") from e
     elif ext == ".pdf":
         raise RuntimeError(f"Use 'Import PDF as Images' app to import PDF files")
+    elif ext == ".mp4":
+        raise RuntimeError(
+            f"Use 'Import Videos' app to import video and "
+            "'Videos project to images project' app to get frames from it"
+        )
     else:
         raise RuntimeError(f"Provided file is not an archive: {filename}")
     filter_fn = lambda x: sly.fs.get_file_ext(x).lower() in g.EXT_TO_CONVERT
