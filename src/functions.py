@@ -226,6 +226,9 @@ def validate_mimetypes(images_names: list, images_paths: list, is_local: bool = 
         new_img_ext = mimetypes.guess_extension(mimetype)
         if new_img_ext == ".pdf":
             raise RuntimeError(f"Use 'Import PDF as Images' app to import PDF files")
+        elif new_img_ext == ".mp4":
+            raise RuntimeError(f"Use 'Import Videos' and 'Videos project to images project' "
+                               "apps to import video and get frames from it")
         new_img_name = f"{get_file_name(image_name)}{new_img_ext}"
         images_names[idx] = new_img_name
         sly.logger.warn(
