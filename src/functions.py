@@ -1,18 +1,19 @@
 import mimetypes
 import os
 import pathlib
+import re
 from typing import List
 
 import magic
 
 # * do not remove folllowing imports, it is used to register avif/heic formats
 import pillow_avif  # noqa
+import supervisely as sly
 from PIL import Image
 from pillow_heif import register_heif_opener
+from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ext
 
 import globals as g
-import supervisely as sly
-from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ext
 
 register_heif_opener()
 
@@ -208,6 +209,8 @@ def get_dataset_name(file_path: str, default: str = "ds0") -> str:
 
     sly.logger.debug(f"get_dataset_name() will return ds_name: {ds_name}")
 
+    if re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}", ds_name):
+        ds_name = f"dataset {ds_name[:-4]}" # remove milliseconds
     return ds_name
 
 
@@ -232,8 +235,10 @@ def validate_mimetypes(images_names: list, images_paths: list, is_local: bool = 
         if new_img_ext == ".pdf":
             raise RuntimeError(f"Use 'Import PDF as Images' app to import PDF files")
         elif new_img_ext == ".mp4":
-            raise RuntimeError(f"Use 'Import Videos' and 'Videos project to images project' "
-                               "apps to import video and get frames from it")
+            raise RuntimeError(
+                f"Use 'Import Videos' and 'Videos project to images project' "
+                "apps to import video and get frames from it"
+            )
         new_img_name = f"{get_file_name(image_name)}{new_img_ext}"
         images_names[idx] = new_img_name
         sly.logger.warn(
