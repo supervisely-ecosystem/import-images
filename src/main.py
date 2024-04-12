@@ -55,7 +55,8 @@ def import_images(api: sly.Api, task_id: int):
                 g.NEED_DOWNLOAD = True
                 break
 
-    if g.PROJECT_ID is None:
+    project = api.project.get_info_by_id(g.PROJECT_ID) if g.PROJECT_ID else None
+    if project is None:
         project_name = (
             f.get_project_name_from_input_path(g.INPUT_PATH)
             if len(g.OUTPUT_PROJECT_NAME) == 0
@@ -67,8 +68,6 @@ def import_images(api: sly.Api, task_id: int):
         project = api.project.create(
             workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
         )
-    else:
-        project = api.project.get_info_by_id(g.PROJECT_ID)
 
     if g.NEED_DOWNLOAD:
         sly.logger.info(f"Data will be downloaded: {g.CHECKED_INPUT_PATH}")
