@@ -1,8 +1,7 @@
 import os
 
-from dotenv import load_dotenv
-
 import supervisely as sly
+from dotenv import load_dotenv
 
 if sly.is_development():
     load_dotenv("local.env")
@@ -49,8 +48,7 @@ def import_images(api: sly.Api, task_id: int):
             ext = "." + meta.get("ext")
             if ext and ext in g.EXT_TO_CONVERT:
                 sly.logger.debug(
-                    f"Found file with unsupported extension. "
-                    "Will try to convert it to jpeg."
+                    f"Found file with unsupported extension. " "Will try to convert it to jpeg."
                 )
                 g.NEED_DOWNLOAD = True
                 break
@@ -148,6 +146,9 @@ def import_images(api: sly.Api, task_id: int):
             sly.logger.info(msg=f"Temp directory: '{temp_dir_name}' was successfully removed.")
 
     api.task.set_output_project(task_id=task_id, project_id=project.id, project_name=project.name)
+    # -------------------------------------- Add Workflow Output ------------------------------------- #
+    g.workflow.add_output(project.id)
+    # ----------------------------------------------- - ---------------------------------------------- #
 
 
 @sly.handle_exceptions(has_ui=False)

@@ -2,11 +2,12 @@ import os
 import sys
 from distutils.util import strtobool
 
+import supervisely as sly
 from dotenv import load_dotenv
 from fastapi import FastAPI
-
-import supervisely as sly
 from supervisely.app.fastapi import create
+
+from workflow import Workflow
 
 app_root_directory = os.path.dirname(os.getcwd())
 sys.path.append(app_root_directory)
@@ -24,6 +25,7 @@ sly_app = create()
 
 api = sly.Api.from_env()
 
+workflow = Workflow(api)
 
 TASK_ID = sly.env.task_id()
 TEAM_ID = sly.env.team_id()
