@@ -146,7 +146,9 @@ def import_images(api: sly.Api, task_id: int):
             sly.logger.info(msg=f"Temp directory: '{temp_dir_name}' was successfully removed.")
 
     api.task.set_output_project(task_id=task_id, project_id=project.id, project_name=project.name)
-    api.app.add_output_project(project.id)
+    # -------------------------------------- Add Workflow Output ------------------------------------- #
+    g.workflow.add_output(project.id)
+    # ----------------------------------------------- - ---------------------------------------------- #
 
 
 @sly.handle_exceptions(has_ui=False)

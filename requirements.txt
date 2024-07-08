@@ -1,4 +1,0 @@
-# supervisely==6.73.60
-git+https://github.com/supervisely/supervisely.git@workflow+versions
-pillow-avif-plugin<=1.4.3
-pillow_heif<=0.15.0
