@@ -1,9 +1,13 @@
 {
   "name": "Import Images",
   "type": "app",
-  "categories": ["import", "images", "essentials"],
+  "categories": [
+    "import",
+    "images",
+    "essentials"
+  ],
   "description": "Drag and drop images to Supervisely, supported formats: .jpg, .jpeg, jpe, .mpo, .bmp, .png, .tiff, .tif, .webp, .nrrd",
-  "docker_image": "supervisely/import-export:6.73.138",
+  "docker_image": "supervisely/import-export:6.73.159",
   "main_script": "src/main.py",
   "modal_template": "src/modal.html",
   "modal_template_state": {
