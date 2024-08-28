@@ -79,7 +79,7 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
         except Exception as e:
             raise RuntimeError(f"Failed to process file {filename}: {repr(e)}") from e
     elif ext == ".pdf":
-        raise RuntimeError(f"Use 'Import PDF as Images' or 'Auto Import' app to import PDF files")
+        raise RuntimeError(f"Use 'Import PDF as Images' or 'Auto Import' app to import PDF pages as images")
     elif ext == ".mp4":
         raise RuntimeError(
             f"Use 'Import Videos' app to import video and "
