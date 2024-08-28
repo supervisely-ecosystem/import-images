@@ -87,9 +87,9 @@ def unpack_archive_on_team_files(api: sly.Api, archive_path) -> List[sly.api.fil
             "Alternatively, you can use 'Auto Import' for any data type supported in Supervisely."
         )
     elif ext == ".csv":
-        raise RuntimeError(f"Use 'Import Images from CSV' or 'Auto Import' app to import CSV files")
+        raise RuntimeError(f"Use 'Import Images from CSV' or 'Auto Import' app to import images from CSV files")
     else:
-        raise RuntimeError(f"Provided file is not an archive: {filename}. Try using 'Auto Import' application.")
+        raise RuntimeError(f"Provided file is not an archive: {filename}. Try using 'Auto Import' application")
     filter_fn = lambda x: sly.fs.get_file_ext(x).lower() in g.EXT_TO_CONVERT
     files_to_convert = sly.fs.list_files_recursively(unpacked_path, filter_fn=filter_fn)
     if len(files_to_convert) > 0:
