@@ -26,7 +26,7 @@ def get_project_name() -> str:
         sly.logger.warning('Project name you have provided is invalid. '
                       'Project and dataset names cannot contain following characters: "\\", "/", "|". '
                       'Thus, destination project will not contain them.', extra={'input name': n})
-        n.replace('/', '').replace('|', '').replace('\\', '')
+        n = n.replace('/', '').replace('|', '').replace('\\', '')
     sly.logger.debug(f"Project name: {n}")
     return n
 
