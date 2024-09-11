@@ -17,6 +17,19 @@ import globals as g
 
 register_heif_opener()
 
+def get_project_name() -> str:
+    project_name = g.OUTPUT_PROJECT_NAME
+    if len(project_name) == 0:
+        full_path_dir = os.path.dirname(g.INPUT_PATH)
+        return os.path.basename(full_path_dir) or sly.fs.get_file_name(g.INPUT_PATH)
+    if any(char in project_name for char in ['/', '|', '\\']):
+        sly.logger.warning('Project name you have provided is invalid. '
+                      'Project and dataset names cannot contain following characters: "\\", "/", "|". '
+                      'Thus, destination project will not contain them.', extra={'input name': project_name})
+        project_name = project_name.replace('/', '').replace('|', '').replace('\\', '')
+    sly.logger.debug(f"Project name: {project_name}")
+    return project_name
+
 
 def get_project_name_from_input_path(input_path: str) -> str:
     """Returns project name from target sly folder name."""
