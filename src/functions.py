@@ -235,6 +235,7 @@ def validate_mimetypes(images_names: list, images_paths: list, is_local: bool = 
 
     mimetypes.add_type("image/webp", ".webp")  # to extend types_map
     mimetypes.add_type("image/jpeg", ".jfif")  # to extend types_map
+    mimetypes.add_type("image/nrrd", ".nrrd")  # to extend types_map
 
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
