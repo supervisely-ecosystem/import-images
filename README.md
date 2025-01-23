@@ -10,11 +10,11 @@
   <a href="#Demo">Demo</a>
 </p>
 
-[![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](https://ecosystem.supervise.ly/apps/supervisely-ecosystem/import-images)
-[![](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://supervise.ly/slack)
+[![](https://img.shields.io/badge/supervisely-ecosystem-brightgreen)](https://ecosystem.supervisely.com/apps/supervisely-ecosystem/import-images)
+[![](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://supervisely.com/slack)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/supervisely-ecosystem/import-images)
-[![views](https://app.supervise.ly/img/badges/views/supervisely-ecosystem/import-images.png)](https://supervise.ly)
-[![runs](https://app.supervise.ly/img/badges/runs/supervisely-ecosystem/import-images.png)](https://supervise.ly)
+[![views](https://app.supervisely.com/img/badges/views/supervisely-ecosystem/import-images.png)](https://supervisely.com)
+[![runs](https://app.supervisely.com/img/badges/runs/supervisely-ecosystem/import-images.png)](https://supervisely.com)
 
 </div>
 
@@ -42,7 +42,7 @@ Single image file size limits:
 
 🏋️ `1.2.7` Starting from this version application supports import from the special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using a drag-and-drop mechanism:
   1. Run an agent on your computer where data is stored. Watch [how-to video](https://youtu.be/aO7Zc4kTrVg).
-  2. Copy your data to the special folder on your computer that was created by the agent. Agent mounts this directory to your Supervisely instance, and it becomes accessible in Team Files. Learn more [in documentation](https://docs.supervise.ly/customization/agents/agent-storage). Watch [how-to video](https://youtu.be/63Kc8Xq9H0U).
+  2. Copy your data to the special folder on your computer that was created by the agent. Agent mounts this directory to your Supervisely instance, and it becomes accessible in Team Files. Learn more [in documentation](https://docs.supervisely.com/customization/agents/agent-storage). Watch [how-to video](https://youtu.be/63Kc8Xq9H0U).
   3. Go to `Team Files` → `Supervisely Agent` and find your folder there.
   4. Open the context menu and start the app. Now app will upload data directly from your computer to the platform.
 
