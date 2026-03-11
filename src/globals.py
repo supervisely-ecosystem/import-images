@@ -1,6 +1,5 @@
 import os
 import sys
-from distutils.util import strtobool
 
 import supervisely as sly
 from dotenv import load_dotenv
@@ -50,8 +49,8 @@ if INPUT_PATH is None:
 OUTPUT_PROJECT_NAME = os.environ.get("modal.state.project_name", "")
 DEFAULT_DATASET_NAME = "ds0"
 
-NORMALIZE_EXIF = bool(strtobool(os.getenv("modal.state.normalize_exif", "False")))
-REMOVE_ALPHA_CHANNEL = bool(strtobool(os.getenv("modal.state.remove_alpha_channel", "False")))
+NORMALIZE_EXIF = os.getenv("modal.state.normalize_exif", "False").lower() == "true"
+REMOVE_ALPHA_CHANNEL = os.getenv("modal.state.remove_alpha_channel", "False").lower() == "true"
 
 IS_ON_AGENT = api.file.is_on_agent(INPUT_PATH)
 sly.logger.info(f"App starting... IS_ON_AGENT: {IS_ON_AGENT}.")
@@ -59,7 +58,7 @@ sly.logger.info(f"App starting... IS_ON_AGENT: {IS_ON_AGENT}.")
 NEED_DOWNLOAD = NORMALIZE_EXIF or REMOVE_ALPHA_CHANNEL or IS_ON_AGENT
 sly.logger.info(f"App starting... NEED_DOWNLOAD: {NEED_DOWNLOAD}.")
 
-REMOVE_SOURCE = bool(strtobool(os.getenv("modal.state.remove_source", "False")))
+REMOVE_SOURCE = os.getenv("modal.state.remove_source", "False").lower() == "true"
 
 STORAGE_DIR = sly.app.get_data_dir()
 
