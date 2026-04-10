@@ -14,6 +14,24 @@ curl -sSL "https://raw.githubusercontent.com/supervisely-ecosystem/workflows/sel
 SDK_VER=6.73.556
 APP_NAME="import-images"
 
+# Derive ENTRYPOINT_CMD from config.json
+CONFIG_FILE="$PROJECT_ROOT/config.json"
+ENTRYPOINT_CMD="$(python3 -c "
+import json, sys
+with open('$CONFIG_FILE') as f:
+    cfg = json.load(f)
+ep = cfg.get('entrypoint')
+if ep:
+    print(ep)
+else:
+    ms = cfg.get('main_script')
+    if ms:
+        print('python ' + ms)
+    else:
+        print('ERROR: neither entrypoint nor main_script found in config.json', file=sys.stderr)
+        sys.exit(1)
+")"
+
 # Always use project root as build context, and correct relative paths
 docker build \
 	--no-cache \
@@ -21,6 +39,7 @@ docker build \
 	--build-arg tag_ref_name=$SDK_VER \
 	--build-arg RUNTIME_BASE_IMAGE=base-py-sdk-hardened \
 	--build-arg REQUIREMENTS_FILE=dev_requirements.txt \
+	--build-arg ENTRYPOINT_CMD="$ENTRYPOINT_CMD" \
 	--label python_sdk_version=$SDK_VER \
 	-t supervisely/$APP_NAME:test \
 	"$PROJECT_ROOT"
