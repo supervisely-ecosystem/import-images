@@ -38,6 +38,8 @@ Single image file size limits:
 ⚠️ Images in `.nrrd` format can be viewed in **Image annotation tool v2** only.
 
 #### Changelog
+🗂️ `1.3.0` Starting from this version application preserves the nested folder structure on import: subfolders become nested datasets (created with the corresponding parent dataset) instead of a flat list. A single redundant top-level folder is skipped, and when importing into an existing dataset the structure is created inside it.
+
 🗄️ `1.2.22` Starting from this version application supports uploading files from a single archive. To do so, change the context menu to the File.
 
 🏋️ `1.2.7` Starting from this version application supports import from the special directory on your local computer. It is made for Enterprise Edition customers who need to upload tens or even hundreds of gigabytes of data without using a drag-and-drop mechanism:
