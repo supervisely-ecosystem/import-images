@@ -15,19 +15,22 @@ from supervisely.io.fs import get_file_ext, get_file_name, get_file_name_with_ex
 
 import globals as g
 
+mimetypes.add_type("image/webp", ".webp")  # to extend types_map
+mimetypes.add_type("image/jpeg", ".jfif")  # to extend types_map
+mimetypes.add_type("image/nrrd", ".nrrd")  # to extend types_map
+
 register_heif_opener()
 
 def get_project_name() -> str:
     project_name = g.OUTPUT_PROJECT_NAME
-    if len(project_name) == 0:
-        full_path_dir = os.path.dirname(g.INPUT_PATH)
-        return os.path.basename(full_path_dir) or sly.fs.get_file_name(g.INPUT_PATH)
     if any(char in project_name for char in ['/', '|', '\\']):
         sly.logger.warning('Project name you have provided is invalid. '
                       'Project and dataset names cannot contain following characters: "\\", "/", "|". '
                       'Thus, destination project will not contain them.', extra={'input name': project_name})
         project_name = project_name.replace('/', '').replace('|', '').replace('\\', '')
-    sly.logger.debug(f"Project name: {project_name}")
+    if len(project_name) == 0:
+        project_name = get_project_name_from_input_path(g.INPUT_PATH)
+    sly.logger.info(f"Project name: {project_name}")
     return project_name
 
 
@@ -149,9 +152,62 @@ def normalize_exif_and_remove_alpha_channel(names: list, paths: list) -> tuple:
     return res_batch_names, res_batch_paths
 
 
-def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
-    """Creates a dictionary map based on api response from the target sly folder data."""
-    datasets_images_map = {}
+def normalize_ds_name(name: str) -> str:
+    """Normalize a single dataset name component (drops timestamp milliseconds)."""
+    if re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}", name):
+        name = f"dataset {name[:-4]}"  # remove milliseconds
+    return name
+
+
+def get_dataset_chain(full_path_file: str, base: str) -> list:
+    """Returns the list of dataset name components for an image file relative to `base`.
+
+    Empty list means the image lies directly in the root `base` directory.
+    Each component is normalized via `normalize_ds_name`.
+    """
+    base = (base or "").rstrip("/")
+    dir_path = os.path.dirname(full_path_file).rstrip("/")
+    rel = os.path.relpath(dir_path, base) if base else dir_path.lstrip("/")
+    if rel in (".", "", os.sep):
+        return []
+    parts = [p for p in pathlib.Path(rel).parts if p not in ("", ".")]
+    return [normalize_ds_name(p) for p in parts]
+
+
+def collapse_top_levels(chains: list) -> int:
+    """Number of leading single-folder levels to drop from the top of the tree.
+
+    Stops when: an image lies directly at the current root, the current top level has
+    more than one folder, or the single top folder has its own direct images.
+    """
+    chains = [list(c) for c in chains]
+    k = 0
+    while True:
+        cur = [c[k:] for c in chains]
+        if not cur or any(len(c) == 0 for c in cur):
+            break
+        tops = set(c[0] for c in cur)
+        if len(tops) != 1:
+            break
+        top = next(iter(tops))
+        if any(c == [top] for c in cur):  # single top folder has direct images
+            break
+        k += 1
+    return k
+
+
+def get_datasets_hierarchy(dir_info: list, base: str, into_existing_dataset: bool = False) -> list:
+    """Builds an ordered (top-down) list of dataset nodes from the target folder data.
+
+    Each node: {"chain": tuple, "name": str|None, "parent_chain": tuple,
+                "img_names": [...], "img_paths": [...], "img_hashes": [...]}.
+    Ancestor nodes that only contain subfolders carry empty image lists. A node with an
+    empty `chain` represents the root level itself.
+    When `into_existing_dataset` is True (import into an existing `DATASET_ID`), that
+    dataset is treated as the root: loose root images go directly into it and subfolders
+    become datasets nested inside it (no `ds0` wrapper is created).
+    """
+    records = []  # (chain_list, file_name, file_path, file_hash)
     for file_info in dir_info:
         full_path_file = file_info["path"]
         try:
@@ -171,71 +227,74 @@ def get_datasets_images_map(dir_info: list, dataset_name=None) -> tuple:
         if file_ext.lower() in g.EXT_TO_CONVERT:
             g.NEED_DOWNLOAD = True
         file_hash = file_info["hash"]
-        if dataset_name is not None:
-            ds_name = dataset_name
-        else:
-            try:
-                ds_name = get_dataset_name(full_path_file.lstrip("/"))
-            except Exception:
-                ds_name = g.DEFAULT_DATASET_NAME
 
-        if ds_name not in datasets_images_map.keys():
-            datasets_images_map[ds_name] = {
+        try:
+            chain = get_dataset_chain(full_path_file, base)
+        except Exception:
+            chain = []
+
+        file_path = full_path_file
+        if g.api.file.is_on_agent(full_path_file):
+            agent_id, file_path = g.api.file.parse_agent_id_and_path(full_path_file)
+
+        records.append([chain, file_name, file_path, file_hash])
+
+    # Collapse the leading single-folder chain (top level only).
+    k = collapse_top_levels([r[0] for r in records])
+    for r in records:
+        r[0] = r[0][k:]
+    # If any image lies directly in root after collapse:
+    #  - new project: the root level becomes the default dataset (ds0) and sibling
+    #    folders nest inside it;
+    #  - existing dataset: those images stay at the root (empty chain) so they are
+    #    uploaded directly into the existing dataset.
+    if not into_existing_dataset and any(len(r[0]) == 0 for r in records):
+        for r in records:
+            r[0] = [g.DEFAULT_DATASET_NAME] + r[0]
+
+    # Group images by their final chain, deduping names within each node.
+    nodes = {}  # chain_tuple -> node dict
+
+    def ensure_node(chain_tuple):
+        if chain_tuple not in nodes:
+            nodes[chain_tuple] = {
+                "chain": chain_tuple,
+                "name": chain_tuple[-1] if chain_tuple else None,
+                "parent_chain": chain_tuple[:-1] if len(chain_tuple) >= 1 else None,
                 "img_names": [],
                 "img_paths": [],
                 "img_hashes": [],
             }
+        return nodes[chain_tuple]
 
-        if file_name in datasets_images_map[ds_name]["img_names"]:
-            temp_name = sly.fs.get_file_name(full_path_file)
-            temp_ext = sly.fs.get_file_ext(full_path_file)
+    for chain, file_name, file_path, file_hash in records:
+        chain_tuple = tuple(chain)
+        # Register all ancestor nodes so structural folders are created as parents.
+        for depth in range(1, len(chain_tuple)):
+            ensure_node(chain_tuple[:depth])
+        node = ensure_node(chain_tuple)
+
+        if file_name in node["img_names"]:
+            temp_name = sly.fs.get_file_name(file_name)
+            temp_ext = sly.fs.get_file_ext(file_name)
             new_file_name = f"{temp_name}_{sly.rand_str(5)}{temp_ext}"
             sly.logger.warning(
                 "Name {!r} already exists in dataset {!r}: renamed to {!r}".format(
-                    file_name, ds_name, new_file_name
+                    file_name, "/".join(chain_tuple), new_file_name
                 )
             )
             file_name = new_file_name
 
-        datasets_images_map[ds_name]["img_names"].append(file_name)
-        if g.api.file.is_on_agent(full_path_file):
-            agent_id, full_path_file = g.api.file.parse_agent_id_and_path(full_path_file)
-        datasets_images_map[ds_name]["img_paths"].append(full_path_file)
-        datasets_images_map[ds_name]["img_hashes"].append(file_hash)
+        node["img_names"].append(file_name)
+        node["img_paths"].append(file_path)
+        node["img_hashes"].append(file_hash)
 
-    datasets_names = list(datasets_images_map.keys())
-    return datasets_names, datasets_images_map
-
-
-def get_dataset_name(file_path: str, default: str = "ds0") -> str:
-    """Dataset name from image path."""
-    sly.logger.debug(f"get_dataset_name() started parsing  file_path: {file_path}")
-    dir_path = os.path.split(file_path)[0]
-    ds_name = default
-    path_parts = pathlib.Path(dir_path).parts
-    if len(path_parts) != 1:
-        sly.logger.debug(f"get_dataset_name() found following path_parts: {path_parts}")
-
-        # ? This code uses root directory after drag-n-drop, ignoring structure.
-        # ? Why is it here?
-        # if g.INPUT_PATH.startswith("/import/import-images/"):
-        #     ds_name = path_parts[3]
-        # else:
-        ds_name = path_parts[-1]
-
-    sly.logger.debug(f"get_dataset_name() will return ds_name: {ds_name}")
-
-    if re.match(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}", ds_name):
-        ds_name = f"dataset {ds_name[:-4]}" # remove milliseconds
-    return ds_name
+    # Order top-down so parents are created before children.
+    return [nodes[c] for c in sorted(nodes.keys(), key=len)]
 
 
 def validate_mimetypes(images_names: list, images_paths: list, is_local: bool = False) -> list:
     """Validate mimetypes for images."""
-
-    mimetypes.add_type("image/webp", ".webp")  # to extend types_map
-    mimetypes.add_type("image/jpeg", ".jfif")  # to extend types_map
-    mimetypes.add_type("image/nrrd", ".nrrd")  # to extend types_map
 
     mime = magic.Magic(mime=True)
     for idx, (image_name, image_path) in enumerate(zip(images_names, images_paths)):
@@ -265,18 +324,29 @@ def validate_mimetypes(images_names: list, images_paths: list, is_local: bool = 
     return images_names
 
 
-def check_names_uniqueness(api: sly.Api, dataset_id, batch_names) -> list:
-    """Check names uniqueness."""
-    existing_images = api.image.get_list(dataset_id)
-    existing_names = [image_info.name for image_info in existing_images]
+def get_existing_names(api: sly.Api, dataset_id) -> set:
+    """Fetch the set of image names already present in a dataset (single API call)."""
+    return {image_info.name for image_info in api.image.get_list(dataset_id)}
 
+
+def check_names_uniqueness(existing_names: set, dataset_id, batch_names) -> list:
+    """Resolve name collisions against `existing_names` and register the chosen names.
+
+    `existing_names` is mutated in place so uniqueness holds across batches without
+    re-querying the API on every batch.
+    """
     for idx, name in enumerate(batch_names):
-        if name in existing_names:
-            new_name = api.image.get_free_name(dataset_id, name)
-            batch_names[idx] = new_name
+        new_name = name
+        while new_name in existing_names:
+            stem = get_file_name(name)
+            ext = get_file_ext(name)
+            new_name = f"{stem}_{sly.rand_str(5)}{ext}"
+        if new_name != name:
             sly.logger.warn(
                 f"Name {name} already exists in dataset {dataset_id}: renamed to {new_name}"
             )
+        batch_names[idx] = new_name
+        existing_names.add(new_name)
     return batch_names
 
 
@@ -293,3 +363,4 @@ def convert_to_jpg(path) -> tuple:
         return new_path, new_name
     except Exception as e:
         sly.logger.warn(f"Skip image {name}: {repr(e)}", extra={"file_path": path})
+        return None, None
