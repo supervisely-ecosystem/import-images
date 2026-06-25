@@ -43,7 +43,7 @@ def import_images(api: sly.Api, task_id: int):
     elif len(dir_info) > 1:
         for file_info in dir_info:
             meta = file_info.get("meta")
-            if meta is None:
+            if meta is None or meta.get("ext") is None:
                 continue
             ext = "." + meta.get("ext")
             if ext and ext in g.EXT_TO_CONVERT:
@@ -55,39 +55,54 @@ def import_images(api: sly.Api, task_id: int):
 
     project = api.project.get_info_by_id(g.PROJECT_ID) if g.PROJECT_ID else None
     if project is None:
+        project_name = f.get_project_name()
         project = api.project.create(
-            workspace_id=g.WORKSPACE_ID, name=f.get_project_name(), change_name_if_conflict=True
+            workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
         )
+
+    into_existing_dataset = g.DATASET_ID is not None
+    existing_dataset_info = None
+    nodes = f.get_datasets_hierarchy(dir_info, g.CHECKED_INPUT_PATH, into_existing_dataset)
+
+    sly.logger.debug(f"Datasets hierarchy: {[node['chain'] for node in nodes]}")
 
     if g.NEED_DOWNLOAD:
         sly.logger.info(f"Data will be downloaded: {g.CHECKED_INPUT_PATH}")
         f.download_project(api, g.CHECKED_INPUT_PATH)
 
-    dataset_info = None
-    if g.DATASET_ID is not None:
-        dataset_info = api.dataset.get_info_by_id(g.DATASET_ID)
-        datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, dataset_info.name)
-    else:
-        datasets_names, datasets_images_map = f.get_datasets_images_map(dir_info, None)
+    # The root level (empty chain) maps to the target: a newly created dataset is nested
+    # under the project, while an existing DATASET_ID becomes the root for nested datasets.
+    created_ids = {}  # chain_tuple -> dataset_id
+    if into_existing_dataset:
+        existing_dataset_info = api.dataset.get_info_by_id(g.DATASET_ID)
+        created_ids[()] = existing_dataset_info.id
 
-    sly.logger.debug(f"Datasets names: {datasets_names}")
-    sly.logger.debug(f"Datasets images map: {datasets_images_map}")
-
-    for dataset_name in datasets_names:
-        if g.DATASET_ID is None:
+    for node in nodes:
+        dataset_name = node["name"]
+        if not node["chain"] and into_existing_dataset:
+            # Loose root images are uploaded directly into the existing dataset.
+            dataset_info = existing_dataset_info
+        else:
+            parent_chain = node["parent_chain"]
+            parent_id = created_ids.get(parent_chain) if parent_chain is not None else None
             dataset_info = api.dataset.create(
-                project_id=project.id, name=dataset_name, change_name_if_conflict=True
+                project_id=project.id,
+                name=dataset_name,
+                parent_id=parent_id,
+                change_name_if_conflict=True,
             )
+            created_ids[node["chain"]] = dataset_info.id
 
-        images_names = datasets_images_map[dataset_name]["img_names"]
-        images_hashes = datasets_images_map[dataset_name]["img_hashes"]
-        images_paths = datasets_images_map[dataset_name]["img_paths"]
+        images_names = node["img_names"]
+        images_hashes = node["img_hashes"]
+        images_paths = node["img_paths"]
 
         if g.NEED_DOWNLOAD:
             images_paths = [
                 os.path.join(g.STORAGE_DIR, image_path.lstrip("/")) for image_path in images_paths
             ]
 
+        existing_names = f.get_existing_names(api, dataset_info.id)
         progress = sly.Progress(
             f"Uploading images to dataset {dataset_name}", total_cnt=len(images_names)
         )
@@ -103,7 +118,7 @@ def import_images(api: sly.Api, task_id: int):
                     )
                     res_batch_names = f.validate_mimetypes(res_batch_names, res_batch_paths)
                     res_batch_names = f.check_names_uniqueness(
-                        api, dataset_info.id, res_batch_names
+                        existing_names, dataset_info.id, res_batch_names
                     )
                     api.image.upload_paths(
                         dataset_id=dataset_info.id,
@@ -115,7 +130,9 @@ def import_images(api: sly.Api, task_id: int):
             else:
                 try:
                     batch_names = f.validate_mimetypes(batch_names, batch_paths)
-                    batch_names = f.check_names_uniqueness(api, dataset_info.id, batch_names)
+                    batch_names = f.check_names_uniqueness(
+                        existing_names, dataset_info.id, batch_names
+                    )
                     api.image.upload_hashes(
                         dataset_id=dataset_info.id,
                         names=batch_names,
