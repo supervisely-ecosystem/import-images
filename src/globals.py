@@ -64,3 +64,7 @@ STORAGE_DIR = sly.app.get_data_dir()
 
 EXT_TO_CONVERT = [".heic", ".avif"]
 SUPPORTED_EXTS = [*sly.image.SUPPORTED_IMG_EXTS, *EXT_TO_CONVERT]
+
+# Files found in the input that are not imported because they are not supported images.
+# The source is only removed from Team Files when this stays empty.
+SKIPPED_FILES = []

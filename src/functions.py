@@ -220,6 +220,7 @@ def get_datasets_hierarchy(dir_info: list, base: str, into_existing_dataset: boo
                     full_path_file, str(e)
                 )
             )
+            g.SKIPPED_FILES.append(full_path_file)
             continue
 
         file_name = get_file_name_with_ext(full_path_file)

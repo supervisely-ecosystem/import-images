@@ -66,6 +66,11 @@ def import_images(api: sly.Api, task_id: int):
 
     sly.logger.debug(f"Datasets hierarchy: {[node['chain'] for node in nodes]}")
 
+    # Count what we plan to import vs what is actually uploaded, so the source is only
+    # removed from Team Files when every image made it into the project.
+    planned_cnt = sum(len(node["img_names"]) for node in nodes)
+    uploaded_cnt = 0
+
     if g.NEED_DOWNLOAD:
         sly.logger.info(f"Data will be downloaded: {g.CHECKED_INPUT_PATH}")
         f.download_project(api, g.CHECKED_INPUT_PATH)
@@ -120,11 +125,12 @@ def import_images(api: sly.Api, task_id: int):
                     res_batch_names = f.check_names_uniqueness(
                         existing_names, dataset_info.id, res_batch_names
                     )
-                    api.image.upload_paths(
+                    uploaded = api.image.upload_paths(
                         dataset_id=dataset_info.id,
                         names=res_batch_names,
                         paths=res_batch_paths,
                     )
+                    uploaded_cnt += len(uploaded)
                 except Exception as e:
                     sly.logger.warn(msg=e)
             else:
@@ -133,11 +139,12 @@ def import_images(api: sly.Api, task_id: int):
                     batch_names = f.check_names_uniqueness(
                         existing_names, dataset_info.id, batch_names
                     )
-                    api.image.upload_hashes(
+                    uploaded = api.image.upload_hashes(
                         dataset_id=dataset_info.id,
                         names=batch_names,
                         hashes=batch_hashes,
                     )
+                    uploaded_cnt += len(uploaded)
                 except Exception as e:
                     sly.logger.warn(msg=e)
 
@@ -145,10 +152,38 @@ def import_images(api: sly.Api, task_id: int):
 
     if g.NEED_DOWNLOAD:
         sly.fs.remove_dir(dir_=g.STORAGE_DIR)
+
+    failed_cnt = planned_cnt - uploaded_cnt
+    skipped_cnt = len(g.SKIPPED_FILES)
+    sly.logger.info(
+        f"Import summary: {uploaded_cnt} of {planned_cnt} images imported, "
+        f"{failed_cnt} failed, {skipped_cnt} files skipped as unsupported."
+    )
+    import_complete = planned_cnt > 0 and failed_cnt == 0 and skipped_cnt == 0
+
+    source_kept = False
     if g.REMOVE_SOURCE and not g.IS_ON_AGENT:
-        api.file.remove(team_id=g.TEAM_ID, path=g.INPUT_PATH)
         source_dir_name = g.INPUT_PATH.lstrip("/").rstrip("/")
-        sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
+        if import_complete:
+            api.file.remove(team_id=g.TEAM_ID, path=g.INPUT_PATH)
+            sly.logger.info(msg=f"Source directory: '{source_dir_name}' was successfully removed.")
+        else:
+            source_kept = True
+            reasons = []
+            if failed_cnt > 0:
+                reasons.append(f"{failed_cnt} of {planned_cnt} images failed to import")
+            if skipped_cnt > 0:
+                reasons.append(f"{skipped_cnt} files were skipped as unsupported")
+            if planned_cnt == 0:
+                reasons.append("no images were found to import")
+            sly.logger.warning(
+                f"Source directory: '{source_dir_name}' was NOT removed from Team Files "
+                f"because the import was not complete ({'; '.join(reasons)}). "
+                "Check the warnings above; the source is kept so no data is lost.",
+                extra={"skipped_files": g.SKIPPED_FILES[:100]},
+            )
+        # The temp folder is a copy created by this app (unpacked archive), so it is
+        # safe to remove even when the original source is kept.
         if g.CHECKED_INPUT_PATH != g.INPUT_PATH:
             api.file.remove(team_id=g.TEAM_ID, path=g.CHECKED_INPUT_PATH)
             temp_dir_name = g.CHECKED_INPUT_PATH.lstrip("/").rstrip("/")
@@ -158,6 +193,17 @@ def import_images(api: sly.Api, task_id: int):
     # -------------------------------------- Add Workflow Output ------------------------------------- #
     g.workflow.add_output(project.id)
     # ----------------------------------------------- - ---------------------------------------------- #
+
+    if failed_cnt > 0:
+        # Do not report success when images were lost on the way; what was imported stays
+        # in the project.
+        msg = (
+            f"{failed_cnt} of {planned_cnt} images failed to import (see warnings above). "
+            f"{uploaded_cnt} images were imported into project '{project.name}' (id: {project.id})."
+        )
+        if source_kept:
+            msg += " The source in Team Files was kept."
+        raise RuntimeError(msg)
 
 
 @sly.handle_exceptions(has_ui=False)
