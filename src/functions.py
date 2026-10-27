@@ -220,6 +220,7 @@ def get_datasets_hierarchy(dir_info: list, base: str, into_existing_dataset: boo
                     full_path_file, str(e)
                 )
             )
+            g.SKIPPED_FILES.append(full_path_file)
             continue
 
         file_name = get_file_name_with_ext(full_path_file)
@@ -322,6 +323,32 @@ def validate_mimetypes(images_names: list, images_paths: list, is_local: bool = 
         )
 
     return images_names
+
+
+def remove_project_if_empty(api: sly.Api, project) -> bool:
+    """Remove `project` if the server reports it holds no items. Returns True if removed.
+
+    Only call this for a project the current run created itself.
+    """
+    try:
+        info = api.project.get_info_by_id(project.id)
+        if info is None or info.items_count != 0:
+            sly.logger.info(
+                f"Project '{project.name}' (id: {project.id}) is kept: it is not empty "
+                f"(items: {None if info is None else info.items_count})."
+            )
+            return False
+        api.project.remove(project.id)
+    except Exception as e:
+        sly.logger.warning(
+            f"Could not remove the empty project '{project.name}' (id: {project.id}): {e!r}"
+        )
+        return False
+    sly.logger.info(
+        f"Nothing was imported: the empty project '{project.name}' (id: {project.id}) "
+        "created by this run was removed."
+    )
+    return True
 
 
 def get_existing_names(api: sly.Api, dataset_id) -> set:
