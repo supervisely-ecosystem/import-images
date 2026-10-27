@@ -53,13 +53,6 @@ def import_images(api: sly.Api, task_id: int):
                 g.NEED_DOWNLOAD = True
                 break
 
-    project = api.project.get_info_by_id(g.PROJECT_ID) if g.PROJECT_ID else None
-    if project is None:
-        project_name = f.get_project_name()
-        project = api.project.create(
-            workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
-        )
-
     into_existing_dataset = g.DATASET_ID is not None
     existing_dataset_info = None
     nodes = f.get_datasets_hierarchy(dir_info, g.CHECKED_INPUT_PATH, into_existing_dataset)
@@ -70,6 +63,27 @@ def import_images(api: sly.Api, task_id: int):
     # removed from Team Files when every image made it into the project.
     planned_cnt = sum(len(node["img_names"]) for node in nodes)
     uploaded_cnt = 0
+
+    if planned_cnt == 0:
+        # Nothing importable: fail before creating a project, so no empty project is left
+        # behind. The source is kept as is.
+        remove_temp_copy(api)
+        supported = ", ".join(dict.fromkeys(ext.lower() for ext in g.SUPPORTED_EXTS))
+        raise RuntimeError(
+            f"No supported images found in '{g.INPUT_PATH}' "
+            f"({len(g.SKIPPED_FILES)} files skipped as unsupported). "
+            f"Supported extensions: {supported}. "
+            "Nothing was imported, no project was created and the source in Team Files was kept."
+        )
+
+    project = api.project.get_info_by_id(g.PROJECT_ID) if g.PROJECT_ID else None
+    project_created = False
+    if project is None:
+        project_name = f.get_project_name()
+        project = api.project.create(
+            workspace_id=g.WORKSPACE_ID, name=project_name, change_name_if_conflict=True
+        )
+        project_created = True
 
     if g.NEED_DOWNLOAD:
         sly.logger.info(f"Data will be downloaded: {g.CHECKED_INPUT_PATH}")
@@ -182,28 +196,52 @@ def import_images(api: sly.Api, task_id: int):
                 "Check the warnings above; the source is kept so no data is lost.",
                 extra={"skipped_files": g.SKIPPED_FILES[:100]},
             )
-        # The temp folder is a copy created by this app (unpacked archive), so it is
-        # safe to remove even when the original source is kept.
-        if g.CHECKED_INPUT_PATH != g.INPUT_PATH:
-            api.file.remove(team_id=g.TEAM_ID, path=g.CHECKED_INPUT_PATH)
-            temp_dir_name = g.CHECKED_INPUT_PATH.lstrip("/").rstrip("/")
-            sly.logger.info(msg=f"Temp directory: '{temp_dir_name}' was successfully removed.")
+    remove_temp_copy(api)
 
-    api.task.set_output_project(task_id=task_id, project_id=project.id, project_name=project.name)
-    # -------------------------------------- Add Workflow Output ------------------------------------- #
-    g.workflow.add_output(project.id)
-    # ----------------------------------------------- - ---------------------------------------------- #
+    # Nothing made it into a project this run created: remove it rather than leave an
+    # empty project behind (only if the server confirms it is still empty).
+    project_removed = (
+        uploaded_cnt == 0 and project_created and f.remove_project_if_empty(api, project)
+    )
+
+    if not project_removed:
+        api.task.set_output_project(
+            task_id=task_id, project_id=project.id, project_name=project.name
+        )
+        # ------------------------------------ Add Workflow Output ----------------------------------- #
+        g.workflow.add_output(project.id)
+        # --------------------------------------------- - -------------------------------------------- #
 
     if failed_cnt > 0:
         # Do not report success when images were lost on the way; what was imported stays
         # in the project.
-        msg = (
-            f"{failed_cnt} of {planned_cnt} images failed to import (see warnings above). "
-            f"{uploaded_cnt} images were imported into project '{project.name}' (id: {project.id})."
-        )
+        msg = f"{failed_cnt} of {planned_cnt} images failed to import (see warnings above)."
+        if project_removed:
+            msg += (
+                f" Nothing was imported, so the empty project '{project.name}' "
+                "created by this run was removed."
+            )
+        else:
+            msg += (
+                f" {uploaded_cnt} images were imported into project '{project.name}' "
+                f"(id: {project.id})."
+            )
         if source_kept:
             msg += " The source in Team Files was kept."
         raise RuntimeError(msg)
+
+
+def remove_temp_copy(api: sly.Api):
+    """Remove the app-created /import-images/temp/ copy of an unpacked archive.
+
+    It is a copy made by this app, so it is safe to remove even when the original source
+    is kept. Done only when remove_source is on, as before.
+    """
+    if not g.REMOVE_SOURCE or g.IS_ON_AGENT or g.CHECKED_INPUT_PATH == g.INPUT_PATH:
+        return
+    api.file.remove(team_id=g.TEAM_ID, path=g.CHECKED_INPUT_PATH)
+    temp_dir_name = g.CHECKED_INPUT_PATH.lstrip("/").rstrip("/")
+    sly.logger.info(msg=f"Temp directory: '{temp_dir_name}' was successfully removed.")
 
 
 @sly.handle_exceptions(has_ui=False)

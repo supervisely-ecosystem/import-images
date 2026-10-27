@@ -65,23 +65,46 @@ class FakeImageApi:
     upload_paths = None  # not used: tests run without NEED_DOWNLOAD
 
 
+class FakeProjectApi:
+    """Projects: `existing` ids already exist (not created by the app), new ones get id 100+."""
+
+    def __init__(self, image_api, existing=()):
+        self._image = image_api
+        self.projects = {pid: f"existing {pid}" for pid in existing}
+        self.created = []  # ids created by the app
+        self.removed = []  # ids removed by the app
+        self.datasets = {}  # dataset_id -> project_id
+
+    def get_info_by_id(self, id):
+        if id not in self.projects:
+            return None
+        items = sum(1 for ds_id, _ in self._image.uploaded if self.datasets.get(ds_id) == id)
+        return SimpleNamespace(id=id, name=self.projects[id], items_count=items)
+
+    def create(self, workspace_id, name, change_name_if_conflict=False):
+        pid = 100 + len(self.created)
+        self.projects[pid] = name
+        self.created.append(pid)
+        return SimpleNamespace(id=pid, name=name)
+
+    def remove(self, id):
+        self.projects.pop(id)
+        self.removed.append(id)
+
+
 class FakeApi:
-    def __init__(self, files, reject_names=()):
+    def __init__(self, files, reject_names=(), existing_projects=()):
         self.file = FakeFileApi(files)
         self.image = FakeImageApi(reject_names)
         self._ds = 0
-        self.project = SimpleNamespace(
-            get_info_by_id=lambda id: None,
-            create=lambda workspace_id, name, change_name_if_conflict=False: SimpleNamespace(
-                id=100, name=name
-            ),
-        )
+        self.project = FakeProjectApi(self.image, existing_projects)
         self.dataset = SimpleNamespace(create=self._create_dataset, get_info_by_id=None)
         self.output_project = None
         self.task = SimpleNamespace(set_output_project=self._set_output_project)
 
     def _create_dataset(self, project_id, name, parent_id=None, change_name_if_conflict=False):
         self._ds += 1
+        self.project.datasets[self._ds] = project_id
         return SimpleNamespace(id=self._ds, name=name)
 
     def _set_output_project(self, task_id, project_id, project_name=None):
@@ -93,8 +116,8 @@ def run_app(tmp_path, monkeypatch):
     """Import the app with the given Team Files content and return (main, g, api)."""
     import supervisely as sly
 
-    def _run(files, input_path="/images/", remove_source=True, reject_names=()):
-        api = FakeApi(files, reject_names)
+    def _run(files, input_path="/images/", remove_source=True, reject_names=(), project_id=None):
+        api = FakeApi(files, reject_names, existing_projects=[project_id] if project_id else ())
         monkeypatch.setenv("ENV", "production")
         monkeypatch.setenv("SLY_APP_DATA_DIR", str(tmp_path / "data"))
         monkeypatch.setenv("TASK_ID", "1")
@@ -106,6 +129,8 @@ def run_app(tmp_path, monkeypatch):
                      "context.datasetId", "modal.state.normalize_exif",
                      "modal.state.remove_alpha_channel"):
             monkeypatch.delenv(name, raising=False)
+        if project_id:
+            monkeypatch.setenv("context.projectId", str(project_id))
         monkeypatch.setattr(sly.Api, "from_env", classmethod(lambda cls, *a, **k: api))
         monkeypatch.syspath_prepend(SRC_DIR)
         for mod in APP_MODULES:

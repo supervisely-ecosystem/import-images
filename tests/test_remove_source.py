@@ -41,6 +41,7 @@ def test_pdf_disguised_as_jpg_keeps_source_and_fails_task(run_app):
     assert api.file.removed == []  # source kept: it holds the only copy of 10 images
     assert len(api.image.uploaded) == 2  # what was imported stays in the project
     assert api.output_project == 100
+    assert api.project.removed == []
     assert err is not None and "10 of 12 images failed" in str(err)  # task not "success"
 
 
@@ -51,6 +52,7 @@ def test_server_rejection_keeps_source_and_fails_task(run_app):
 
     assert api.file.removed == []
     assert len(api.image.uploaded) == 10
+    assert api.project.removed == []
     assert err is not None and "2 of 12 images failed" in str(err)
 
 
@@ -70,4 +72,60 @@ def test_remove_source_off_never_removes(run_app):
 
     assert _import(main, g, api) is None
 
+    assert api.file.removed == []
+
+
+# --- nothing imported: the task must fail and must not leave an empty project ---------
+
+
+def test_no_supported_images_fails_without_creating_project(run_app):
+    # the folder holds files, but none of them is a supported image
+    files = {"/images/report.pdf": "application/pdf", "/images/notes.docx": "application/msword"}
+    main, g, api = run_app(files)
+
+    err = _import(main, g, api)
+
+    assert err is not None and "No supported images found in '/images/'" in str(err)
+    assert "Supported extensions:" in str(err) and ".jpg" in str(err)
+    assert api.project.created == []  # checked before creating anything
+    assert api.output_project is None
+    assert api.file.removed == []  # source kept
+
+
+def test_all_images_rejected_removes_the_empty_project_it_created(run_app):
+    # ".jpg" files that are really PDFs: planned, but validate_mimetypes rejects the batch
+    files = {"/images/a.jpg": "application/pdf", "/images/b.jpg": "application/pdf"}
+    main, g, api = run_app(files)
+
+    err = _import(main, g, api)
+
+    assert err is not None and "2 of 2 images failed" in str(err)
+    assert api.image.uploaded == []
+    assert api.project.created == [100]
+    assert api.project.removed == [100]  # the empty project this run created
+    assert api.output_project is None  # no output pointing at a removed project
+    assert api.file.removed == []
+
+
+def test_all_images_rejected_keeps_an_existing_project(run_app):
+    files = {"/images/a.jpg": "application/pdf", "/images/b.jpg": "application/pdf"}
+    main, g, api = run_app(files, project_id=7)
+
+    err = _import(main, g, api)
+
+    assert err is not None and "2 of 2 images failed" in str(err)
+    assert api.project.created == []
+    assert api.project.removed == []  # never remove a project the run did not create
+    assert api.output_project == 7
+    assert api.file.removed == []
+
+
+def test_no_supported_images_into_existing_project_fails(run_app):
+    main, g, api = run_app({"/images/a.pdf": "application/pdf", "/images/b.txt": "text/plain"},
+                           project_id=7)
+
+    err = _import(main, g, api)
+
+    assert err is not None and "No supported images found" in str(err)
+    assert api.project.created == [] and api.project.removed == []
     assert api.file.removed == []
